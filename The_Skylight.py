@@ -7,7 +7,7 @@ import random
 
 random.seed(time.time())
 
-settings = {"debug" : True,
+settings = {"debug" : False,
             "paused" : False,
             "num_songs" : 0,
             "count" : 0,
