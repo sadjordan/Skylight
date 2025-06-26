@@ -11,7 +11,7 @@ settings = {"debug" : False,
             "paused" : False,
             "num_songs" : 0,
             "count" : 0,
-            "song_names" : [], #to be phased out
+            # "song_names" : [], #to be phased out
             "song_dict" : {} } #queue order, (name, path)
 # song_queue = {}
 
@@ -139,7 +139,7 @@ async def main():
     for song in songs: #song paths
         decoded_song = unquote(song) 
         song_path = os.path.join('music', decoded_song)
-        (settings["song_names"]).append(decoded_song)
+        # (settings["song_names"]).append(decoded_song)
         song_paths.append(song_path)
         
         (settings["song_dict"])[queue_order] = (decoded_song, song_path)
@@ -149,10 +149,10 @@ async def main():
             print("num_songs_main is: " + str(settings["num_songs"]))
         
     print("Queue: ")
-    queue_count = 0
-    for song in settings["song_names"]:
-        queue_count += 1
-        print(f"    {queue_count}. {song}")
+    # queue_count = 0
+    for song in range(1, settings["num_songs"] + 1):
+        # queue_count += 1
+        print(f"    {song}. {((settings["song_dict"])[song - 1])[0]}")
     print()
     
     while True:
