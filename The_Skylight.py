@@ -45,6 +45,11 @@ async def user_conts():
             # settings["count"] += 1
         elif cmd == "j": #go back to previous song
             pygame.mixer.music.stop()
+            if settings["debug"]: print("count within j after stop(): " + str(settings["count"]))
+            if settings["count"] == 0:
+                settings["paused"] = False
+                settings["count"] = settings["num_songs"]
+                # settings["count"] -= 1
             settings["paused"] = False
             settings["count"] -= 2
             bounds_check()
@@ -126,7 +131,6 @@ async def user_conts():
             # if settings["debug"]:
             #     print("Current count: " + str(settings["count"]))
             #     print("Song at current count: " + str(((settings['song_dict'])[(settings["count"])])[0]))
-            
             
             
 async def main():
