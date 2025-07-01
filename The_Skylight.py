@@ -12,8 +12,8 @@ settings = {"debug" : False,
             "num_songs" : 0,
             "count" : 0,
             # "song_names" : [], #to be phased out
-            "song_dict" : {} } #queue order, (name, path)
-# song_queue = {}
+            "song_dict" : {},
+            "repeat" : False,} #queue order, (name, path)
 
 def bounds_check():
     if settings["count"] >= settings["num_songs"]:
@@ -57,7 +57,7 @@ async def user_conts():
             pygame.mixer.music.stop()
             print("Quitting player.")
             os._exit(0)
-        elif cmd == "r": #random skip
+        elif cmd == "R": #random skip
             r_num = random.randint(0, settings["num_songs"])
             for i in range(r_num):
                 pygame.mixer.music.stop()
@@ -131,6 +131,12 @@ async def user_conts():
             # if settings["debug"]:
             #     print("Current count: " + str(settings["count"]))
             #     print("Song at current count: " + str(((settings['song_dict'])[(settings["count"])])[0]))
+        elif cmd == "r":
+            settings["repeat"] =  not settings["repeat"]
+            if settings["repeat"]:
+                print("Repeating Current Song")
+            else:
+                print("Repeat Disabled")
             
             
 async def main():
@@ -176,6 +182,8 @@ async def main():
                 await asyncio.sleep(0.2)
             elif pygame.mixer.music.get_busy():
                 await asyncio.sleep(0.2)
+            elif settings["repeat"]:
+                break
             else:
                 settings["count"] += 1
                 break
