@@ -8,6 +8,8 @@ import random
 random.seed(time.time())
 
 settings = {"debug" : False,
+            "playlist" : "music",
+            "reload" : False,
             "paused" : False,
             "num_songs" : 0,
             "count" : 0,
@@ -137,9 +139,15 @@ async def user_conts():
                 print("Repeating Current Song")
             else:
                 print("Repeat Disabled")
+        elif cmd.startswith("playlist "):
+            playlist_name = cmd[len("playlist "):].strip()
+            settings["playlist"] = playlist_name
+            settings["reload"] = True
+            pygame.mixer.music.stop()
+            break
             
             
-async def main():
+async def player():
     songs =  [f for f in os.listdir('music') if f.endswith('.mp3')]
     
     song_paths = []
@@ -148,7 +156,7 @@ async def main():
     
     for song in songs: #song paths
         decoded_song = unquote(song) 
-        song_path = os.path.join('music', decoded_song)
+        song_path = os.path.join(settings["playlist"], decoded_song)
         # (settings["song_names"]).append(decoded_song)
         song_paths.append(song_path)
         
@@ -184,12 +192,15 @@ async def main():
                 await asyncio.sleep(0.2)
             elif settings["repeat"]:
                 break
+            elif settings["reload"]:
+                settings["reload"] = False
             else:
                 settings["count"] += 1
                 break
         
 async def run_player():
-    await asyncio.gather(main(), user_conts())
+    while True:
+        await asyncio.gather(player(), user_conts())
         
-        
+
 asyncio.run(run_player())
