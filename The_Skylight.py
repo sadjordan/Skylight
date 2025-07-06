@@ -17,6 +17,14 @@ settings = {"debug" : False,
             "song_dict" : {},
             "repeat" : False,} #queue order, (name, path)
 
+def reset_settings():
+    settings["num_songs"] = 0
+    settings["count"] = 0
+    settings["paused"] = False
+    settings["reload"] = False
+    settings["song_dict"] = {}
+    settings["repeat"] = False
+
 def bounds_check():
     if settings["count"] >= settings["num_songs"]:
             # settings["count"] = settings["count"] - (settings["num_songs"])
@@ -128,7 +136,7 @@ async def user_conts():
                 if queue_count >= settings["num_songs"]:
                     queue_count = queue_count - settings["num_songs"]
                 print(f"    {i + 1}. {((settings['song_dict'])[queue_count])[0]}")
-                queue_count += 1                
+                queue_count += 1        
             settings["count"] = 0
             # if settings["debug"]:
             #     print("Current count: " + str(settings["count"]))
@@ -142,13 +150,14 @@ async def user_conts():
         elif cmd.startswith("playlist "):
             playlist_name = cmd[len("playlist "):].strip()
             settings["playlist"] = playlist_name
+            print(settings["playlist"])
             settings["reload"] = True
             pygame.mixer.music.stop()
             break
             
             
 async def player():
-    songs =  [f for f in os.listdir('music') if f.endswith('.mp3')]
+    songs =  [f for f in os.listdir(settings["playlist"]) if f.endswith('.mp3')]
     
     song_paths = []
     
@@ -193,7 +202,8 @@ async def player():
             elif settings["repeat"]:
                 break
             elif settings["reload"]:
-                settings["reload"] = False
+                reset_settings()
+                return
             else:
                 settings["count"] += 1
                 break
