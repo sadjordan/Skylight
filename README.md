@@ -5,8 +5,11 @@ Current features:
 - Shuffle
 - Display queue
 
-Planned features:
-
+In-progress features:
+- Playlists
+    - Folder switch (100%)
+    - Master folder
+    - Error handling
 
 Future features:
 - Weighted skips

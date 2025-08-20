@@ -150,10 +150,33 @@ async def user_conts():
         elif cmd.startswith("playlist "):
             playlist_name = cmd[len("playlist "):].strip()
             settings["playlist"] = playlist_name
-            print(settings["playlist"])
+            if settings["debug"]:
+                print(settings["playlist"])
             settings["reload"] = True
             pygame.mixer.music.stop()
             break
+        elif cmd.startswith("play "):
+            song_name = cmd[len("play "):].strip()
+            search_count = 0
+            print(song_name)
+            for i in range(settings["num_songs"]):
+                print(search_count)
+                print(((settings["song_dict"])[i])[0])
+                if ((settings["song_dict"])[i])[0] == song_name:
+                    if search_count > 0:
+                        settings["count"] = search_count - 1
+                        settings["count"] = (settings["count"]) % settings["num_songs"]
+                        pygame.mixer.music.stop()
+                        break
+                    else:
+                        settings["count"] = settings["num_songs"]
+                        pygame.mixer.music.stop()
+                        break
+                search_count += 1
+            if search_count == settings["num_songs"]:
+                print("Unable to find song")
+                
+            
             
             
 async def player():
