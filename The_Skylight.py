@@ -4,11 +4,14 @@ import asyncio
 import os
 from urllib.parse import unquote
 import random
+from rapidfuzz import process
 
 random.seed(time.time())
 
+DEFAULT_DIRECTORY = "music"
+
 settings = {"debug" : False,
-            "playlist" : "music",
+            "playlist" : "music", #music is default directory
             "reload" : False,
             "paused" : False,
             "num_songs" : 0,
@@ -25,10 +28,30 @@ def reset_settings():
     settings["song_dict"] = {}
     settings["repeat"] = False
 
-def bounds_check():
+def bounds_check(): #might be useless
     if settings["count"] >= settings["num_songs"]:
             # settings["count"] = settings["count"] - (settings["num_songs"])
             settings["count"] = (settings["count"]) % settings["num_songs"]
+            
+def search_song(query):
+    song_names = []
+    
+    for i in range(settings["num_songs"]):
+        song_names.append(((settings["song_dict"])[i])[0])
+        
+    match, score, idx = process.extractOne(query, song_names)
+    if score > 60:
+        return match
+    else:
+        return None
+    
+def search_query(query, search_within):
+    match, score, idx = process.extractOne(query, search_within)
+    if score > 60:
+        return match
+    else:
+        return None
+    
 
 async def play_song(song):
     loop = asyncio.get_event_loop()
@@ -147,33 +170,61 @@ async def user_conts():
                 print("Repeating Current Song")
             else:
                 print("Repeat Disabled")
-        elif cmd.startswith("playlist "):
-            playlist_name = cmd[len("playlist "):].strip()
-            settings["playlist"] = playlist_name
-            if settings["debug"]:
-                print(settings["playlist"])
-            settings["reload"] = True
-            pygame.mixer.music.stop()
-            break
+        elif cmd.startswith("playlist "): #using the search function initially developed for song names 
+            playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
+            playlists.append(DEFAULT_DIRECTORY)
+            
+            playlist_query = cmd[len("playlist "):].strip()
+            match = search_query(playlist_query, playlists)
+            if match:
+                settings["playlist"] = DEFAULT_DIRECTORY + "/" + match
+                settings["reload"] = True
+                pygame.mixer.music.stop()
+                break
+            else:
+                print("Unable to find playlist")
         elif cmd.startswith("play "):
             song_name = cmd[len("play "):].strip()
-            search_count = 0
-            print(song_name)
-            for i in range(settings["num_songs"]):
-                print(search_count)
-                print(((settings["song_dict"])[i])[0])
-                if ((settings["song_dict"])[i])[0] == song_name:
-                    if search_count > 0:
-                        settings["count"] = search_count - 1
-                        settings["count"] = (settings["count"]) % settings["num_songs"]
+            match = search_song(song_name)
+            if match:
+                for i in range(settings["num_songs"]):
+                    if (settings["song_dict"][i][0] == match):
+                        settings["count"] = i - 1
                         pygame.mixer.music.stop()
                         break
-                    else:
-                        settings["count"] = settings["num_songs"]
+            else:
+                print("Unable to find song")
+            # song_name = cmd[len("play "):].strip()
+            # search_count = 0
+            # print(song_name)
+            # for i in range(settings["num_songs"]):
+            #     print(search_count)
+            #     print(((settings["song_dict"])[i])[0])
+            #     if ((settings["song_dict"])[i])[0] == song_name:
+            #         if search_count > 0:
+            #             settings["count"] = search_count - 1
+            #             settings["count"] = (settings["count"]) % settings["num_songs"]
+            #             pygame.mixer.music.stop()
+            #             break
+            #         else:
+            #             settings["count"] = settings["num_songs"]
+            #             pygame.mixer.music.stop()
+            #             break
+            #     search_count += 1
+            # if search_count == settings["num_songs"]:
+            #     print("Unable to find song")
+        elif cmd == "test":
+            # search_song("Remember")
+            
+            song_name = cmd[len("play "):].strip()
+            match = search_song(song_name)
+            if match:
+                for i in range(settings["num_songs"]):
+                    if (settings["song_dict"][i][0] == match):
+                        settings["count"] = i - 1
                         pygame.mixer.music.stop()
                         break
-                search_count += 1
-            if search_count == settings["num_songs"]:
+            else:
                 print("Unable to find song")
                 
             
