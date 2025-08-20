@@ -177,10 +177,16 @@ async def user_conts():
             playlist_query = cmd[len("playlist "):].strip()
             match = search_query(playlist_query, playlists)
             if match:
-                settings["playlist"] = DEFAULT_DIRECTORY + "/" + match
-                settings["reload"] = True
-                pygame.mixer.music.stop()
-                break
+                if match != DEFAULT_DIRECTORY:
+                    settings["playlist"] = DEFAULT_DIRECTORY + "/" + match
+                    settings["reload"] = True
+                    pygame.mixer.music.stop()
+                    break
+                else:
+                    settings["playlist"] = DEFAULT_DIRECTORY
+                    settings["reload"] = True
+                    pygame.mixer.music.stop()
+                    break
             else:
                 print("Unable to find playlist")
         elif cmd.startswith("play "):
@@ -194,25 +200,6 @@ async def user_conts():
                         break
             else:
                 print("Unable to find song")
-            # song_name = cmd[len("play "):].strip()
-            # search_count = 0
-            # print(song_name)
-            # for i in range(settings["num_songs"]):
-            #     print(search_count)
-            #     print(((settings["song_dict"])[i])[0])
-            #     if ((settings["song_dict"])[i])[0] == song_name:
-            #         if search_count > 0:
-            #             settings["count"] = search_count - 1
-            #             settings["count"] = (settings["count"]) % settings["num_songs"]
-            #             pygame.mixer.music.stop()
-            #             break
-            #         else:
-            #             settings["count"] = settings["num_songs"]
-            #             pygame.mixer.music.stop()
-            #             break
-            #     search_count += 1
-            # if search_count == settings["num_songs"]:
-            #     print("Unable to find song")
         elif cmd == "test":
             # search_song("Remember")
             
