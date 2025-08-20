@@ -6,13 +6,17 @@ Current features:
 - Display queue
 - Play specific song
 - Added a search function fo queries for playlists or songs do not have to be exact
-- 
+- Playlists
 
 In-progress features:
-- Playlists
-    - Folder switch (100%)
-    - Master folder (Kindof? Is maintaining a list of ALL songs really necessary?)
-    - Error handling (Done)
+- Song Downloader:
+    - Search function for songs on YouTube
+        - Search via terminal
+        - Immediate return of result
+            - OPTIONAL: Return results other than the top
+        - Confirmation of download
+    - API or function to download
+    - Add to playlists
 
 Future features:
 - Weighted skips
@@ -22,3 +26,6 @@ Future features:
 - Song downloader
 - Chrome extension to analyse Youtube Music song choices
 - UI 
+    - UI will be used to create playlists and offer playlist management services
+    - Actually might need to turn music into the master folder so that songs can be added
+    - Features to be added: Create, Clone, Archive and Delete
