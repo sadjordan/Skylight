@@ -5,7 +5,7 @@ Current features:
 - Shuffle
 - Display queue
 - Play specific song
-- Added a search function fo queries for playlists or songs do not have to be exact
+- Added a search function for queries for playlists or songs so they do not have to be exact
 - Playlists
 
 In-progress features:
@@ -16,7 +16,7 @@ In-progress features:
             - OPTIONAL: Return results other than the top
         - Confirmation of download
     - API or function to download
-    - Add to playlists
+    - Add to playlists (or master folder)
 
 Future features:
 - Weighted skips
