@@ -19,11 +19,15 @@ In-progress features:
     - API or function to download (100%) — using a library
     - Add to playlists (or master folder) (100%) — saved in music folder
 
+- Lyrics
+    - Find a service which provides lyrics for songs
+    - Save the lyrics (might want to implement a db song paths and lyrics are stored for efficiency instead of interating through the whole folder)
+    - Sync lyrics to music (more difficult, but we will see)
+
 Future features:
 - Weighted skips
+    - Store information on skips (including shuffles, searches) and fully listened to.
     - We could actually try ML for this
-- Lyrics
-- Sync lyrics to music
 - Chrome extension to analyse Youtube Music song choices
 - UI 
     - UI will be used to create playlists and offer playlist management services
