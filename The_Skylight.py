@@ -5,6 +5,8 @@ import os
 from urllib.parse import unquote
 import random
 from rapidfuzz import process
+from youtubesearchpython import VideosSearch
+import yt_dlp
 
 random.seed(time.time())
 
@@ -18,7 +20,9 @@ settings = {"debug" : False,
             "count" : 0,
             # "song_names" : [], #to be phased out
             "song_dict" : {},
-            "repeat" : False,} #queue order, (name, path)
+            "repeat" : False, #queue order, (name, path)
+            "query_lock" : False
+            } 
 
 def reset_settings():
     settings["num_songs"] = 0
@@ -200,19 +204,68 @@ async def user_conts():
                         break
             else:
                 print("Unable to find song")
-        elif cmd == "test":
-            # search_song("Remember")
+        elif cmd.startswith("query "):
+            yt_query = cmd[len("query "):].strip()
+            ytSearch = VideosSearch(yt_query, limit = 10)
+            results = ytSearch.result()
             
-            song_name = cmd[len("play "):].strip()
-            match = search_song(song_name)
-            if match:
-                for i in range(settings["num_songs"]):
-                    if (settings["song_dict"][i][0] == match):
-                        settings["count"] = i - 1
-                        pygame.mixer.music.stop()
-                        break
-            else:
-                print("Unable to find song")
+            top_video = results['result'][0]
+            print("Top result: ")
+            print(top_video["title"])
+            print(top_video["link"])
+
+            selected_video = [top_video["title"], top_video["link"]]
+            response = input("Would you like to download this? (For more results use query more) \n")
+            
+            while response.startswith("query "):
+                if response == "query more":
+                    count = 1
+                    for video in results['result']:
+                        
+                        print(f"{count}.\t{video["title"]}")
+                        print(video["link"] + "\n")
+                        
+                        count += 1
+                        
+                        print("To select a video for download, use query [list position]")
+                if (response[len("query "):].strip()).isdigit():
+                    index = int(response[len("query "):].strip()) - 1
+                    temp = results['result'][index]
+                    selected_video = [temp["title"], temp["link"]]
+                    
+                response = input(f"Would you like to download the selected video ({selected_video[0]})? \n")
+            
+            if response.lower() == "yes":
+                ydl_opts = {
+                    'format: bestaudio/best'
+                    'outtmpl': '%(title)s.%(ext)s',
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }]
+                }
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([(selected_video[1])])
+                    print("\nOperation complete!")
+            else: 
+                print("Operation cancelled")
+
+            
+        # elif cmd == "test":
+        #     # search_song("Remember")
+            
+        #     song_name = cmd[len("play "):].strip()
+        #     match = search_song(song_name)
+        #     if match:
+        #         for i in range(settings["num_songs"]):
+        #             if (settings["song_dict"][i][0] == match):
+        #                 settings["count"] = i - 1
+        #                 pygame.mixer.music.stop()
+        #                 break
+        #     else:
+        #         print("Unable to find song")
                 
             
             

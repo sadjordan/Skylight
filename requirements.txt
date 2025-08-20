@@ -2,3 +2,5 @@ pygame
 asyncio
 urllib
 rapidfuzz
+youtube-search-python
+yt_dlp
