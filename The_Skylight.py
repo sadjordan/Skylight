@@ -237,8 +237,8 @@ async def user_conts():
             
             if response.lower() == "yes":
                 ydl_opts = {
-                    'format: bestaudio/best'
-                    'outtmpl': '%(title)s.%(ext)s',
+                    'format': 'bestaudio/best',
+                    'outtmpl': f'{DEFAULT_DIRECTORY}/%(title)s.%(ext)s',
                     'postprocessors': [{
                         'key': 'FFmpegExtractAudio',
                         'preferredcodec': 'mp3',
