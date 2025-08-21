@@ -10,19 +10,15 @@ Current features:
 - Song Downloader
 
 In-progress features:
-- Song Downloader:
-    - Search function for songs on YouTube (100%)
-        - Search via terminal
-        - Immediate return of result
-            - OPTIONAL: Return results other than the top
-        - Confirmation of download
-    - API or function to download (100%) — using a library
-    - Add to playlists (or master folder) (100%) — saved in music folder
-
 - Lyrics
     - Find a service which provides lyrics for songs
+        - lyrics.ovh is API-free which means less hassle for the user
+        - I'm thinking the flow could be:
+            - User inputs song or user downloads song
+            - Format the song data into artist name and song name (chatgpt? but needs an API, could use google)
+            - Use lyrics.ovh to get the lyrics
     - Save the lyrics (might want to implement a db song paths and lyrics are stored for efficiency instead of interating through the whole folder)
-    - Sync lyrics to music (more difficult, but we will see)
+    - OPTIONAL: Sync lyrics to music (more difficult, but we will see)
 
 Future features:
 - Weighted skips

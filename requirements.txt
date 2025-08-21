@@ -4,3 +4,4 @@ urllib
 rapidfuzz
 youtube-search-python
 yt_dlp
+beautifulsoup4

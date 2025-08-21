@@ -7,10 +7,13 @@ import random
 from rapidfuzz import process
 from youtubesearchpython import VideosSearch
 import yt_dlp
+import requests
+from bs4 import BeautifulSoup
 
 random.seed(time.time())
 
 DEFAULT_DIRECTORY = "music"
+SEARCH_ENGINE = f"https://duckduckgo.com/html/?q="
 
 settings = {"debug" : False,
             "playlist" : "music", #music is default directory
@@ -21,7 +24,6 @@ settings = {"debug" : False,
             # "song_names" : [], #to be phased out
             "song_dict" : {},
             "repeat" : False, #queue order, (name, path)
-            "query_lock" : False
             } 
 
 def reset_settings():
@@ -56,6 +58,12 @@ def search_query(query, search_within):
     else:
         return None
     
+def search_web(query):
+    url = f"{SEARCH_ENGINE}{query.replace(' ', '+')}"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
 
 async def play_song(song):
     loop = asyncio.get_event_loop()
@@ -253,19 +261,8 @@ async def user_conts():
                 print("Operation cancelled")
 
             
-        # elif cmd == "test":
-        #     # search_song("Remember")
-            
-        #     song_name = cmd[len("play "):].strip()
-        #     match = search_song(song_name)
-        #     if match:
-        #         for i in range(settings["num_songs"]):
-        #             if (settings["song_dict"][i][0] == match):
-        #                 settings["count"] = i - 1
-        #                 pygame.mixer.music.stop()
-        #                 break
-        #     else:
-        #         print("Unable to find song")
+        elif cmd == "test":
+            search_web("History of Man" + " Lyrics")
                 
             
             
