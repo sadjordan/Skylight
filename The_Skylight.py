@@ -15,6 +15,7 @@ random.seed(time.time())
 
 DEFAULT_DIRECTORY = "music"
 SEARCH_ENGINE = f"https://duckduckgo.com/html/?q="
+DB_FILE = 'songs.db'
 
 settings = {"debug" : False,
             "playlist" : DEFAULT_DIRECTORY, 
@@ -80,7 +81,7 @@ def search_web(query):
         return None
     
 def initial_database_creation(): #database added in lyrics update
-    conn = sqlite3.connect('songs.db')
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -109,22 +110,37 @@ def initial_database_creation(): #database added in lyrics update
 def song_name_artist_extraction(filename):
     query = filename.replace(".mp3", "")
     search_result = search_web(query + "Genius Lyrics")
-    # print(search_result)
+    print(search_result)
     search_result = search_result.replace("Lyrics | Genius Lyrics", "")
-    # print(search_result)
+    search_result = search_result.replace("Lyrics - Genius", "")
+    print(search_result)
     song_details = search_result.split("-")
-    # print(song_details)
+    print(song_details)
     song_details = [detail.strip() for detail in song_details]
-    # print(song_details)
+    print(song_details)
     
     response = requests.get(f"https://api.lyrics.ovh/v1/{song_details[0]}/{song_details[1]}")
     print(response)
+    
+    if response != "<Response [200]>":
+        print("Query Failure")
+        return
+    
     print(response.text)
     
+    file_directory = settings["playlist"] + "/" + filename
     
+    print(file_directory)
     
-    
-    
+    conn = sqlite3.connect(DB_FILE)
+    # cursor = conn.cursor()
+    # cursor.execute("""
+    #         UPDATE allsongs
+    #         SET lyrics = ?
+    #         WHERE file_directory = ?
+    #         """, (response.text, file_directory)
+    # )
+
 async def play_song(song):
     loop = asyncio.get_event_loop()
     try:
@@ -338,8 +354,8 @@ async def user_conts():
                 song_directory = search_song(lyrics_query)
                 if song_directory == None:
                     lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
-                    if lyrics_query.lower() == 'x':
-                        break
+                elif lyrics_query == 'x':
+                    break
                 else:
                     print(song_directory)
                     confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
@@ -347,10 +363,10 @@ async def user_conts():
                         break
                     else:
                         lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
-                        if lyrics_query.lower() == 'x':
-                            break
             
-            song_name_artist_extraction(song_directory) #when i break i end up here
+            
+            if lyrics_query != 'x':
+                song_name_artist_extraction(song_directory)
                     
             
 
