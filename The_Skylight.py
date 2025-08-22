@@ -61,19 +61,19 @@ def search_query(query, search_within):
     
 def search_web(query):
     url = f"{SEARCH_ENGINE}{query.replace(' ', '+')}"
-    print(url)
+    # print(url)
     headers = {"User-Agent": "Mozilla/5.0"}
     
     response = requests.get(url, headers=headers)
-    print(response)
+    # print(response)
     soup = BeautifulSoup(response.text, "html.parser")
     results = soup.find_all('a', class_='result__a')
     
     # print(results)
     
     if results:
-        print(results[0].text)
-        print("\n")
+        # print(results[0].text)
+        # print("\n")
         return results[0].text
     else:
         print("Error searching the web")
@@ -105,6 +105,24 @@ def initial_database_creation(): #database added in lyrics update
         
         conn.commit()
     conn.close()
+    
+def song_name_artist_extraction(filename):
+    query = filename.replace(".mp3", "")
+    search_result = search_web(query + "Genius Lyrics")
+    # print(search_result)
+    search_result = search_result.replace("Lyrics | Genius Lyrics", "")
+    # print(search_result)
+    song_details = search_result.split("-")
+    # print(song_details)
+    song_details = [detail.strip() for detail in song_details]
+    # print(song_details)
+    
+    response = requests.get(f"https://api.lyrics.ovh/v1/{song_details[0]}/{song_details[1]}")
+    print(response)
+    print(response.text)
+    
+    
+    
     
     
 async def play_song(song):
@@ -308,6 +326,32 @@ async def user_conts():
             settings["repeat"] = False
             pygame.mixer.music.stop()
             break
+        elif cmd.startswith("lyrics "):
+            lyrics_query = cmd[len("lyrics "):].strip()
+            print(lyrics_query)
+            
+            song_directory = ''
+            
+            # lock = False
+            
+            while True:
+                song_directory = search_song(lyrics_query)
+                if song_directory == None:
+                    lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
+                    if lyrics_query.lower() == 'x':
+                        break
+                else:
+                    print(song_directory)
+                    confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
+                    if confirmation.lower() == "yes":
+                        break
+                    else:
+                        lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
+                        if lyrics_query.lower() == 'x':
+                            break
+            
+            song_name_artist_extraction(song_directory) #when i break i end up here
+                    
             
 
         elif cmd == "test":
