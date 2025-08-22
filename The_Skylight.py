@@ -9,6 +9,7 @@ from youtubesearchpython import VideosSearch
 import yt_dlp
 import requests
 from bs4 import BeautifulSoup
+import sqlite3
 
 random.seed(time.time())
 
@@ -16,13 +17,13 @@ DEFAULT_DIRECTORY = "music"
 SEARCH_ENGINE = f"https://duckduckgo.com/html/?q="
 
 settings = {"debug" : False,
-            "playlist" : "music", #music is default directory
+            "playlist" : DEFAULT_DIRECTORY, 
             "reload" : False,
             "paused" : False,
             "num_songs" : 0,
             "count" : 0,
             # "song_names" : [], #to be phased out
-            "song_dict" : {},
+            "song_dict" : {}, #each entry is the queue number with (file name, file directory)
             "repeat" : False, #queue order, (name, path)
             } 
 
@@ -60,11 +61,52 @@ def search_query(query, search_within):
     
 def search_web(query):
     url = f"{SEARCH_ENGINE}{query.replace(' ', '+')}"
+    print(url)
     headers = {"User-Agent": "Mozilla/5.0"}
     
     response = requests.get(url, headers=headers)
+    print(response)
     soup = BeautifulSoup(response.text, "html.parser")
+    results = soup.find_all('a', class_='result__a')
+    
+    # print(results)
+    
+    if results:
+        print(results[0].text)
+        print("\n")
+        return results[0].text
+    else:
+        print("Error searching the web")
+        return None
+    
+def initial_database_creation(): #database added in lyrics update
+    conn = sqlite3.connect('songs.db')
+    cursor = conn.cursor()
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS allsongs (
+        song_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        file_directory TEXT NOT NULL,
+        lyrics TEXT,
+        artist_name TEXT,
+        song_name TEXT,
+        error INTEGER,
+        downloaded_from TEXT
+    )
+    """)
+
+    conn.commit()
+    
+    for i in range(settings["num_songs"]):
+        cursor.execute("""
+            INSERT INTO allsongs (file_directory)
+            VALUES (?)
+        """, (((settings["song_dict"])[i])[1],))
+        
+        conn.commit()
+    conn.close()
+    
+    
 async def play_song(song):
     loop = asyncio.get_event_loop()
     try:
@@ -191,11 +233,13 @@ async def user_conts():
             if match:
                 if match != DEFAULT_DIRECTORY:
                     settings["playlist"] = DEFAULT_DIRECTORY + "/" + match
+                    settings["repeat"] = False
                     settings["reload"] = True
                     pygame.mixer.music.stop()
                     break
                 else:
                     settings["playlist"] = DEFAULT_DIRECTORY
+                    settings["repeat"] = False
                     settings["reload"] = True
                     pygame.mixer.music.stop()
                     break
@@ -259,11 +303,33 @@ async def user_conts():
                     print("\nOperation complete!")
             else: 
                 print("Operation cancelled")
-
+        elif cmd == "reload":
+            settings["reload"] = True
+            settings["repeat"] = False
+            pygame.mixer.music.stop()
+            break
             
+
         elif cmd == "test":
-            search_web("History of Man" + " Lyrics")
+            
+            results = []
+            song_name_list = []
+            
+            for i in range(settings["num_songs"]):
+                song_name_list.append((((settings["song_dict"])[i])[0]).replace(".mp3", ""))
+            
+            for j in song_name_list:
+                # print(i)
+                # print(j)
+                # print(search_web(j + " Genius Lyrics"))
+                results.append(search_web(j + "Genius Lyrics"))
+                time.sleep(3)
                 
+            # for result in results:
+            #     print(result + "\n")
+            
+        elif cmd == "test2":
+            initial_database_creation()
             
             
             
