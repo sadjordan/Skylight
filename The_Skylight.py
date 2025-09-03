@@ -119,27 +119,79 @@ def song_name_artist_extraction(filename):
     song_details = [detail.strip() for detail in song_details]
     print(song_details)
     
-    response = requests.get(f"https://api.lyrics.ovh/v1/{song_details[0]}/{song_details[1]}")
+    file_directory = settings["playlist"] + "/" + filename
+    
+    # print(file_directory)
+    
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE allsongs
+        SET artist_name = ?, song_name = ?
+        WHERE file_directory = ?
+    """, (song_details[0], song_details[1], file_directory))
+    
+    confirmation = input(f"Is this correct (yes/no)?\nArtist: {song_details[0]}\nSong name: {song_details[1]}\n")
+    
+    if confirmation.lower() == 'yes':
+        conn.commit()
+        conn.close()
+        try:
+            lyric_extraction(song_details[0], song_details[1], file_directory)
+        except Exception as e:
+            print(f"Error: {e}")
+    else:
+        print("Operation cancelled")
+        conn.close()
+        return
+    
+def lyric_extraction(artist, song_name, file_directory):
+    response = requests.get(f"https://api.lyrics.ovh/v1/{artist}/{song_name}")
     print(response)
     
-    if response != "<Response [200]>":
+    if response.status_code != 200:
         print("Query Failure")
         return
     
-    print(response.text)
+    lyrics = response.json().get('lyrics', '')
     
-    file_directory = settings["playlist"] + "/" + filename
-    
-    print(file_directory)
+    print(lyrics)
     
     conn = sqlite3.connect(DB_FILE)
-    # cursor = conn.cursor()
-    # cursor.execute("""
-    #         UPDATE allsongs
-    #         SET lyrics = ?
-    #         WHERE file_directory = ?
-    #         """, (response.text, file_directory)
-    # )
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+            UPDATE allsongs
+            SET lyrics = ?
+            WHERE file_directory = ?
+            """, (lyrics, file_directory)
+    )
+    
+    conn.commit()
+    conn.close()
+
+def display_lyrics(filename):
+    file_directory = settings["playlist"] + "/" + filename
+    
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    
+    cursor.execute("""
+        SELECT lyrics FROM allsongs
+        WHERE file_directory = ?
+    """, (file_directory,))
+    
+    result = cursor.fetchall()
+    conn.close()
+    
+    if result and result[0]:
+        print("\n———————— Lyrics ————————\n")
+        print(result[0][0])
+    else:
+        print("No lyrics found for this song")
+    
 
 async def play_song(song):
     loop = asyncio.get_event_loop()
@@ -342,8 +394,8 @@ async def user_conts():
             settings["repeat"] = False
             pygame.mixer.music.stop()
             break
-        elif cmd.startswith("lyrics "):
-            lyrics_query = cmd[len("lyrics "):].strip()
+        elif cmd.startswith("lyrics search "):
+            lyrics_query = cmd[len("lyrics search "):].strip()
             print(lyrics_query)
             
             song_directory = ''
@@ -363,12 +415,29 @@ async def user_conts():
                         break
                     else:
                         lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
-            
-            
+                        
             if lyrics_query != 'x':
                 song_name_artist_extraction(song_directory)
-                    
-            
+                
+                
+        elif cmd.startswith("lyrics "):
+            lyrics_query = cmd[len("lyrics "):].strip()
+            while True:
+                song_directory = search_song(lyrics_query)
+                if song_directory == None:
+                    lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
+                elif lyrics_query == 'x':
+                    break
+                else:
+                    print(song_directory)
+                    confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
+                    if confirmation.lower() == "yes":
+                        break
+                    else:
+                        lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
+
+            if lyrics_query != 'x':
+                display_lyrics(song_directory)
 
         elif cmd == "test":
             
