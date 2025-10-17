@@ -50,4 +50,7 @@ Future features:
     - Times listened to
     - Times skipped
     - Genre/ tags
-    
+
+
+Bugs:
+- Unable to leave the lyrics search once the query commences unless u click yes
