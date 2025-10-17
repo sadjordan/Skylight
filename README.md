@@ -19,6 +19,11 @@ In-progress features:
             - Use lyrics.ovh to get the lyrics
     - Save the lyrics (might want to implement a db song paths and lyrics are stored for efficiency instead of interating through the whole folder)
     - OPTIONAL: Sync lyrics to music (more difficult, but we will see)
+    - Improve the system of getting artist and song details; allows users to directly modify or provide the details
+    - lyrics.ovh is very unreliable
+    - Improve the formatting of the lyrics
+    - Allow users to directly add or edit lyrics for any song (may have to wait for UI)
+
 
 Future features:
 - Weighted skips
@@ -29,3 +34,20 @@ Future features:
     - UI will be used to create playlists and offer playlist management services
     - Actually might need to turn music into the master folder so that songs can be added
     - Features to be added: Create, Clone, Archive and Delete
+- Duplication detection
+- Better application file structure
+- Delete songs
+- Background or automated lyrics extraction to compensate for lyrics.ovh
+- Reform playlists
+    - A single master folder of songs
+    - Metadata of songs stored in the .db
+    - Playlist information stored in strings in .txt structured like <1,18,19, ...>
+    - Create, delete playlists
+    - Method to add new songs externally added to the database
+    - Add a new column, "date added" to the database.
+- Ability to speed up/ slow down songs
+- Expanded metadata file
+    - Times listened to
+    - Times skipped
+    - Genre/ tags
+    

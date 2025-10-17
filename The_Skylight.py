@@ -355,7 +355,7 @@ async def user_conts():
             selected_video = [top_video["title"], top_video["link"]]
             response = input("Would you like to download this? (For more results use query more) \n")
             
-            while response.startswith("query "):
+            while response.startswith("query ") or response.isdigit(): #idea here is to loop continuously until user selects a video or exits
                 if response == "query more":
                     count = 1
                     for video in results['result']:
@@ -366,8 +366,10 @@ async def user_conts():
                         count += 1
                         
                         print("To select a video for download, use query [list position]")
-                if (response[len("query "):].strip()).isdigit():
-                    index = int(response[len("query "):].strip()) - 1
+                elif response.startswith("query "):
+                    print("Unknown command, please enter a valid command")
+                elif (response.isdigit()):
+                    index = int(response) - 1
                     temp = results['result'][index]
                     selected_video = [temp["title"], temp["link"]]
                     
@@ -386,7 +388,21 @@ async def user_conts():
                 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([(selected_video[1])])
-                    print("\nOperation complete!")
+                    
+                    print("\nDownload complete!")
+                    
+                    file_path = f"{DEFAULT_DIRECTORY}/{selected_video[0]}.mp3"
+                    
+                    conn = sqlite3.connect(DB_FILE)
+                    cursor = conn.cursor()
+                    
+                    cursor.execute("""
+                        INSERT INTO allsongs (file_directory, downloaded_from)
+                        VALUES (?, ?)
+                    """, (file_path, selected_video[1]))
+                    
+                    conn.commit()
+                    conn.close()
             else: 
                 print("Operation cancelled")
         elif cmd == "reload":
