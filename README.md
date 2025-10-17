@@ -50,6 +50,7 @@ Future features:
     - Times listened to
     - Times skipped
     - Genre/ tags
+- A help function because I can barely remember all the function keywords and I made this thing
 
 
 Bugs:
