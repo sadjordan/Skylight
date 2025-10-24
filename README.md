@@ -9,8 +9,15 @@ Current features:
 - Playlists
 - Song Downloader
 
-In-progress features:
+In-progress features: Version 0.2 Song storage overhaul
 
+- Reform playlists
+    - A single master folder of songs
+    - Metadata of songs stored in the .db
+    - Playlist information stored in strings in .txt structured like <1,18,19, ...>
+    - Create, delete playlists
+    - Method to add new songs externally added to the database
+    - Add a new column, "date added" to the database.
 
 
 Future features:
@@ -26,13 +33,7 @@ Future features:
 - Better application file structure
 - Delete songs
 - Background or automated lyrics extraction to compensate for lyrics.ovh
-- Reform playlists
-    - A single master folder of songs
-    - Metadata of songs stored in the .db
-    - Playlist information stored in strings in .txt structured like <1,18,19, ...>
-    - Create, delete playlists
-    - Method to add new songs externally added to the database
-    - Add a new column, "date added" to the database.
+
 - Ability to speed up/ slow down songs
 - Expanded metadata file
     - Times listened to
