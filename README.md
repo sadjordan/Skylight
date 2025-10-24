@@ -45,7 +45,3 @@ Future features:
     - Improve the system of getting artist and song details; allows users to directly modify or provide the details
     - Improve the formatting of the lyrics
     - Allow users to directly add or edit lyrics for any song (may have to wait for UI)
-
-
-Bugs:
-- Unable to leave the lyrics search once the query commences unless u click yes

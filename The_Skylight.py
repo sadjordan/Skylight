@@ -420,21 +420,25 @@ async def user_conts():
                 # lock = False
                 
                 while True:
+                    if lyrics_query == 'x':
+                        print("Operation Cancelled")
+                        break
                     song_directory = search_song(lyrics_query)
                     if song_directory == None:
                         lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
-                    elif lyrics_query == 'x':
-                        break
                     else:
                         print(song_directory)
                         confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
                         if confirmation.lower() == "yes":
+                            song_name_artist_extraction(song_directory)
                             break
-                        else:
-                            lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
+                        else: 
+                            print("Operation Cancelled")
+                            break
+                #         else:
+                #             lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
                             
-                if lyrics_query != 'x':
-                    song_name_artist_extraction(song_directory)
+                # if lyrics_query != 'x':
             elif cmd == "lyrics -c":
                 song_name_artist_extraction(((settings["song_dict"])[settings["count"]])[0])
                 
