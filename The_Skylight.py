@@ -171,7 +171,7 @@ def lyric_extraction(artist, song_name, file_directory):
     conn.commit()
     conn.close()
 
-def display_lyrics(filename):
+def display_lyrics(filename): #input is file name
     file_directory = settings["playlist"] + "/" + filename
     
     conn = sqlite3.connect(DB_FILE)
@@ -410,50 +410,59 @@ async def user_conts():
             settings["repeat"] = False
             pygame.mixer.music.stop()
             break
-        elif cmd.startswith("lyrics search "):
-            lyrics_query = cmd[len("lyrics search "):].strip()
-            print(lyrics_query)
-            
-            song_directory = ''
-            
-            # lock = False
-            
-            while True:
-                song_directory = search_song(lyrics_query)
-                if song_directory == None:
-                    lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
-                elif lyrics_query == 'x':
-                    break
-                else:
-                    print(song_directory)
-                    confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
-                    if confirmation.lower() == "yes":
-                        break
-                    else:
-                        lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
-                        
-            if lyrics_query != 'x':
-                song_name_artist_extraction(song_directory)
-                
-                
         elif cmd.startswith("lyrics "):
-            lyrics_query = cmd[len("lyrics "):].strip()
-            while True:
-                song_directory = search_song(lyrics_query)
-                if song_directory == None:
-                    lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
-                elif lyrics_query == 'x':
-                    break
-                else:
-                    print(song_directory)
-                    confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
-                    if confirmation.lower() == "yes":
+            if cmd.startswith("lyrics search "):
+                lyrics_query = cmd[len("lyrics search "):].strip()
+                print(lyrics_query)
+                
+                song_directory = ''
+                
+                # lock = False
+                
+                while True:
+                    song_directory = search_song(lyrics_query)
+                    if song_directory == None:
+                        lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
+                    elif lyrics_query == 'x':
                         break
                     else:
-                        lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
+                        print(song_directory)
+                        confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
+                        if confirmation.lower() == "yes":
+                            break
+                        else:
+                            lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
+                            
+                if lyrics_query != 'x':
+                    song_name_artist_extraction(song_directory)
+            elif cmd == "lyrics -c":
+                song_name_artist_extraction(((settings["song_dict"])[settings["count"]])[0])
+                
+                
+        # """ Kind of a redundant feature since any use would be for the current song"""        
+        # elif cmd.startswith("lyrics "):
+        #     lyrics_query = cmd[len("lyrics "):].strip()
+        #     while True:
+        #         song_directory = search_song(lyrics_query)
+        #         if song_directory == None:
+        #             lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
+        #         elif lyrics_query == 'x':
+        #             break
+        #         else:
+        #             print(song_directory)
+        #             confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
+        #             if confirmation.lower() == "yes":
+        #                 break
+        #             else:
+        #                 lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
 
-            if lyrics_query != 'x':
-                display_lyrics(song_directory)
+        #     if lyrics_query != 'x':
+        #         display_lyrics(song_directory)
+        
+        elif cmd == "lyrics":
+            song_directory = ((settings["song_dict"])[settings["count"]])[0] #current song
+            # print(song_directory)
+            display_lyrics(song_directory)
 
         elif cmd == "test":
             

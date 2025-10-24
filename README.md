@@ -10,19 +10,7 @@ Current features:
 - Song Downloader
 
 In-progress features:
-- Lyrics
-    - Find a service which provides lyrics for songs
-        - lyrics.ovh is API-free which means less hassle for the user
-        - I'm thinking the flow could be:
-            - User inputs song or user downloads song
-            - Format the song data into artist name and song name (chatgpt? but needs an API, could use google)
-            - Use lyrics.ovh to get the lyrics
-    - Save the lyrics (might want to implement a db song paths and lyrics are stored for efficiency instead of interating through the whole folder)
-    - OPTIONAL: Sync lyrics to music (more difficult, but we will see)
-    - Improve the system of getting artist and song details; allows users to directly modify or provide the details
-    - lyrics.ovh is very unreliable
-    - Improve the formatting of the lyrics
-    - Allow users to directly add or edit lyrics for any song (may have to wait for UI)
+
 
 
 Future features:
@@ -51,6 +39,12 @@ Future features:
     - Times skipped
     - Genre/ tags
 - A help function because I can barely remember all the function keywords and I made this thing
+
+- Lyrics 2.0
+    - Sync lyrics to music (more difficult, but we will see)
+    - Improve the system of getting artist and song details; allows users to directly modify or provide the details
+    - Improve the formatting of the lyrics
+    - Allow users to directly add or edit lyrics for any song (may have to wait for UI)
 
 
 Bugs:
