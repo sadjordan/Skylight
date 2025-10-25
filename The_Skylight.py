@@ -18,17 +18,17 @@ SEARCH_ENGINE = f"https://duckduckgo.com/html/?q="
 DB_FILE = 'songs.db'
 
 settings = {"debug" : False,
-            "playlist" : DEFAULT_DIRECTORY, 
-            "reload" : False,
-            "paused" : False,
-            "num_songs" : 0,
-            "count" : 0,
+            "playlist" : DEFAULT_DIRECTORY, #replaced with default playlist
+            "reload" : False, #if true the player will restart, use when adding more songs or any cases where the player must restart without terminating the instance
+            "paused" : False, 
+            "num_songs" : 0, #this is a count of the number of songs, only modified once when initialised or restarted
+            "count" : 0, #to keep track of which song is being currently played, this will loop around to 0 
             # "song_names" : [], #to be phased out
             "song_dict" : {}, #each entry is the queue number with (file name, file directory)
             "repeat" : False, #queue order, (name, path)
             } 
 
-def reset_settings():
+def reset_settings(): #used when restarting to reset the settings dictionary
     settings["num_songs"] = 0
     settings["count"] = 0
     settings["paused"] = False
@@ -36,7 +36,7 @@ def reset_settings():
     settings["song_dict"] = {}
     settings["repeat"] = False
 
-def bounds_check(): #might be useless
+def bounds_check(): #might be useless, check later on
     if settings["count"] >= settings["num_songs"]:
             # settings["count"] = settings["count"] - (settings["num_songs"])
             settings["count"] = (settings["count"]) % settings["num_songs"]
@@ -107,6 +107,44 @@ def initial_database_creation(): #database added in lyrics update
         conn.commit()
     conn.close()
     
+def database_check(): #database added in lyrics update
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT file_directory FROM allsongs")
+    db_file_list = cursor.fetchall()
+    db_file_list = [row[0] for row in db_file_list]
+    # print(db_file_list)
+    added_count = 0
+    
+    for i in range(settings["num_songs"]):
+        
+        file_directory = ((settings["song_dict"])[i])[1]
+        if file_directory not in db_file_list:
+            # temp += 1
+            # print(temp)
+            cursor.execute("""
+            INSERT INTO allsongs (file_directory)
+            VALUES (?)
+            """, (file_directory,))
+            # print("success")
+            added_count += 1
+            
+        
+        # print(file_directory)
+        # cursor.execute("""
+        #     INSERT INTO allsongs (file_directory)
+        #     VALUES (?)
+        # """, (((settings["song_dict"])[i])[1],))
+    
+    #need to call the dictionary and run a check against the database to delect 
+    #songs with no entry in the database
+    
+    print(f"Songs added to database {added_count}")
+
+    conn.commit()
+    conn.close()
+    
 def song_name_artist_extraction(filename):
     query = filename.replace(".mp3", "")
     search_result = search_web(query + "Genius Lyrics")
@@ -119,7 +157,9 @@ def song_name_artist_extraction(filename):
     song_details = [detail.strip() for detail in song_details]
     print(song_details)
     
-    file_directory = settings["playlist"] + "/" + filename
+    #file_directory = settings["playlist"] + "/" + filename 
+    file_directory = DEFAULT_DIRECTORY + "/" + filename 
+    #Repurposing of the playlist setting for name instead of folder directory
     
     # print(file_directory)
     
@@ -310,7 +350,7 @@ async def user_conts():
                 print("Repeating Current Song")
             else:
                 print("Repeat Disabled")
-        elif cmd.startswith("playlist "): #using the search function initially developed for song names 
+        elif cmd.startswith("playlist "): #playlist must be repurposed
             playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
             playlists.append(DEFAULT_DIRECTORY)
             
@@ -487,7 +527,7 @@ async def user_conts():
             #     print(result + "\n")
             
         elif cmd == "test2":
-            initial_database_creation()
+            database_check()
             
             
             
@@ -509,6 +549,8 @@ async def player():
         settings["num_songs"]+=1
         if settings["debug"]:
             print("num_songs_main is: " + str(settings["num_songs"]))
+            
+    database_check() #check if any songs are not in the database
         
     print("Queue: ")
     # queue_count = 0

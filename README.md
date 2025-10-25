@@ -14,7 +14,7 @@ In-progress features: Version 0.2 Song storage overhaul
 - Reform playlists
     - A single master folder of songs
     - Metadata of songs stored in the .db
-    - Playlist information stored in strings in .txt structured like <1,18,19, ...>
+    - Playlist information stored in database entries structured like <1,18,19, ...> (the numbers being pk's of the songs)
     - Create, delete playlists
     - Method to add new songs externally added to the database
     - Add a new column, "date added" to the database.
@@ -46,3 +46,6 @@ Future features:
     - Improve the system of getting artist and song details; allows users to directly modify or provide the details
     - Improve the formatting of the lyrics
     - Allow users to directly add or edit lyrics for any song (may have to wait for UI)
+
+Bugs:
+- Not really a bug but the search service is imprecise at times, should find a replacement similar to the 'z' used in terminal.
