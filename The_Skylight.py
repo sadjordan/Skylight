@@ -84,6 +84,7 @@ def initial_database_creation(): #database added in lyrics update
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
 
+    #Songs table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS allsongs (
         song_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -92,20 +93,36 @@ def initial_database_creation(): #database added in lyrics update
         artist_name TEXT,
         song_name TEXT,
         error INTEGER,
-        downloaded_from TEXT
+        downloaded_from TEXT,
+        times_listened INTEGER,
+        times_skipped INTEGER,
+    )
+    """)
+    #Note: Can add genre/ tag but would require user effort and seems a bit unnecessary
+    
+    #Playlist table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS playlist (
+        playlist_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        playlist_name TEXT NOT NULL,
+        playlist_song TEXT NOT NULL,
+        playlist_created_on DATE NOT NULL,
+        playlist_switched_to INTEGER NOT NULL,
+        playlist_songs_listened INTEGER NOT NULL,
     )
     """)
 
     conn.commit()
+    #No longer necessary as there is now database_check() which is run at startup
     
-    for i in range(settings["num_songs"]):
-        cursor.execute("""
-            INSERT INTO allsongs (file_directory)
-            VALUES (?)
-        """, (((settings["song_dict"])[i])[1],))
+    # for i in range(settings["num_songs"]):
+    #     cursor.execute("""
+    #         INSERT INTO allsongs (file_directory)
+    #         VALUES (?)
+    #     """, (((settings["song_dict"])[i])[1],))
         
-        conn.commit()
-    conn.close()
+    #     conn.commit()
+    # conn.close() 
     
 def database_check(): #database added in lyrics update
     conn = sqlite3.connect(DB_FILE)
@@ -231,7 +248,6 @@ def display_lyrics(filename): #input is file name
         print(result[0][0])
     else:
         print("No lyrics found for this song")
-    
 
 async def play_song(song):
     loop = asyncio.get_event_loop()

@@ -30,7 +30,7 @@ Future features:
     - Actually might need to turn music into the master folder so that songs can be added
     - Features to be added: Create, Clone, Archive and Delete
 - Duplication detection
-- Better application file structure
+- Better application file structure; split by responsibility [implement in 0.3?]
 - Delete songs
 - Background or automated lyrics extraction to compensate for lyrics.ovh
 
