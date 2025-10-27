@@ -255,7 +255,7 @@ def display_lyrics(filename): #input is file name
         
 class Playlist:
     def __init__(self):
-        pass
+        self.selected_playlist = "None"
     
     def create_playlists(self, playlist_name):
         conn = sqlite3.connect(DB_FILE)
@@ -271,6 +271,55 @@ class Playlist:
                 playlist_songs_listened)
             VALUES (?)
             """, (playlist_name, created_time, 0, 0),)
+        
+        conn.commit()
+        conn.close()
+    
+    def selection_check(self):
+        return self.selected_playlist == "None"
+        
+    def playlist_search(self, playlist): #develop search function for playlists
+        return playlist
+    
+    def select_playlist(self, playlist): #select a playlist for editing
+        #add a function here to connect to the playlist search
+        self.selected_playlist = playlist
+        print(f"{self.selected_playlist} has been selected!")
+    
+    def add_song(self, song): #another function needed to actually get the song file dir
+        if self.selection_check():
+            print("No playlist selected!") #add command for selecting playlist
+            return
+        
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+        SELECT song_id FROM allsongs
+        WHERE file_directory = ?
+        """, (song,))
+        
+        song_pk = cursor.fetchall()
+        
+        cursor.execute("""
+        SELECT playlist_song FROM playlist
+        WHERE playlist_name = ?
+        """, (self.selected_playlist))
+        
+        playlist_songs = cursor.fetchall() #Im pretty sure this returns tuples but need to test
+        
+        playlist_songs = playlist_songs + song_pk + "," #test
+        
+        cursor.execute("""
+            UPDATE playlist
+            SET playlist_song = ?
+            WHERE playlist_name = ?
+            """, ("TBA", self.selected_playlist)
+        )
+        
+        #uncommit later on
+        # conn.commit() 
+        conn.close()
     
     #To add:
     # add_song(song)

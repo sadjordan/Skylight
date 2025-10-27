@@ -60,5 +60,9 @@ Future features:
     - Allow user to set storage cap
     - Redundant? Is storage really an issue?
 
+- Refactor Command System
+    - Current if-else system is getting lengthy
+    - Command registry system
+
 Bugs:
 - Not really a bug but the search service is imprecise at times, should find a replacement similar to the 'z' used in terminal.
