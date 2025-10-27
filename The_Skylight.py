@@ -10,6 +10,7 @@ import yt_dlp
 import requests
 from bs4 import BeautifulSoup
 import sqlite3
+import datetime
 
 random.seed(time.time())
 
@@ -96,6 +97,7 @@ def initial_database_creation(): #database added in lyrics update
         downloaded_from TEXT,
         times_listened INTEGER,
         times_skipped INTEGER,
+        last_listened_to TEXT
     )
     """)
     #Note: Can add genre/ tag but would require user effort and seems a bit unnecessary
@@ -105,10 +107,12 @@ def initial_database_creation(): #database added in lyrics update
     CREATE TABLE IF NOT EXISTS playlist (
         playlist_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         playlist_name TEXT NOT NULL,
-        playlist_song TEXT NOT NULL,
-        playlist_created_on DATE NOT NULL,
+        playlist_song TEXT,
+        playlist_description TEXT,
+        playlist_created_on TEXT NOT NULL,
         playlist_switched_to INTEGER NOT NULL,
         playlist_songs_listened INTEGER NOT NULL,
+        playlist_last_accessed TEXT
     )
     """)
 
@@ -248,6 +252,44 @@ def display_lyrics(filename): #input is file name
         print(result[0][0])
     else:
         print("No lyrics found for this song")
+        
+class Playlist:
+    def __init__(self):
+        pass
+    
+    def create_playlists(self, playlist_name):
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        created_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        
+        cursor.execute("""
+            INSERT INTO playlist (
+                playlist_name,
+                playlist_created_on,
+                playlist_switched_to,
+                playlist_songs_listened)
+            VALUES (?)
+            """, (playlist_name, created_time, 0, 0),)
+    
+    #To add:
+    # add_song(song)
+    # delete_song(song)
+    # add_description(description)
+    # delete_playlist(playlist)
+    # describe_playlist(playlist) #for showing all data
+        
+    #     cursor.execute("""
+    # CREATE TABLE IF NOT EXISTS playlist (
+    #     playlist_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    #     playlist_name TEXT NOT NULL,
+    #     playlist_song TEXT,
+    #     playlist_created_on TEXT NOT NULL,
+    #     playlist_switched_to INTEGER NOT NULL,
+    #     playlist_songs_listened INTEGER NOT NULL,
+    # )
+    # """)
+        
 
 async def play_song(song):
     loop = asyncio.get_event_loop()

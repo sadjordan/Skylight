@@ -19,33 +19,46 @@ In-progress features: Version 0.2 Song storage overhaul
     - Method to add new songs externally added to the database
     - Add a new column, "date added" to the database.
 
-
-Future features:
-- Weighted skips
-    - Store information on skips (including shuffles, searches) and fully listened to.
-    - We could actually try ML for this
-- Chrome extension to analyse Youtube Music song choices
-- UI 
-    - UI will be used to create playlists and offer playlist management services
-    - Actually might need to turn music into the master folder so that songs can be added
-    - Features to be added: Create, Clone, Archive and Delete
-- Duplication detection
-- Better application file structure; split by responsibility [implement in 0.3?]
-- Delete songs
-- Background or automated lyrics extraction to compensate for lyrics.ovh
-
-- Ability to speed up/ slow down songs
 - Expanded metadata file
     - Times listened to
     - Times skipped
     - Genre/ tags
-- A help function because I can barely remember all the function keywords and I made this thing
+
+
+
+Future features:
+
+- Chrome extension to analyse Youtube Music song choices
+
+- Better application file structure; split by responsibility [implement in 0.3?]
+
+- Quality of Life and other improvements:
+    - A help function because I can barely remember all the function keywords and I made this thing
+    - Delete songs
+    - Background or automated lyrics extraction to compensate for lyrics.ovh
+    - Ability to speed up/ slow down songs
+    - Duplication detection
+
+- UI 
+    - UI will be used to create playlists and offer playlist management services
+    - Actually might need to turn music into the master folder so that songs can be added
+    - Features to be added: Create, Clone, Archive and Delete
+
+- Smart song playing system:
+    - Weighted skips
+        - Store information on skips (including shuffles, searches) and fully listened to.
+        - We could actually try ML for this
 
 - Lyrics 2.0
     - Sync lyrics to music (more difficult, but we will see)
     - Improve the system of getting artist and song details; allows users to directly modify or provide the details
     - Improve the formatting of the lyrics
     - Allow users to directly add or edit lyrics for any song (may have to wait for UI)
+
+- Smart Storage
+    - Delete or zip songs that have not been listened to in a while
+    - Allow user to set storage cap
+    - Redundant? Is storage really an issue?
 
 Bugs:
 - Not really a bug but the search service is imprecise at times, should find a replacement similar to the 'z' used in terminal.
