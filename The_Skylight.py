@@ -269,8 +269,10 @@ class Playlist:
                 playlist_created_on,
                 playlist_switched_to,
                 playlist_songs_listened)
-            VALUES (?)
+            VALUES (?, ?, ?, ?)
             """, (playlist_name, created_time, 0, 0),)
+        
+        print(f"Playlist {playlist_name} successfully created!")
         
         conn.commit()
         conn.close()
@@ -457,27 +459,27 @@ async def user_conts():
                 print("Repeating Current Song")
             else:
                 print("Repeat Disabled")
-        elif cmd.startswith("playlist "): #playlist must be repurposed
-            playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
-            playlists.append(DEFAULT_DIRECTORY)
+        # elif cmd.startswith("playlist "): # retired to be replaced with new system
+        #     playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
+        #     playlists.append(DEFAULT_DIRECTORY)
             
-            playlist_query = cmd[len("playlist "):].strip()
-            match = search_query(playlist_query, playlists)
-            if match:
-                if match != DEFAULT_DIRECTORY:
-                    settings["playlist"] = DEFAULT_DIRECTORY + "/" + match
-                    settings["repeat"] = False
-                    settings["reload"] = True
-                    pygame.mixer.music.stop()
-                    break
-                else:
-                    settings["playlist"] = DEFAULT_DIRECTORY
-                    settings["repeat"] = False
-                    settings["reload"] = True
-                    pygame.mixer.music.stop()
-                    break
-            else:
-                print("Unable to find playlist")
+        #     playlist_query = cmd[len("playlist "):].strip()
+        #     match = search_query(playlist_query, playlists)
+        #     if match:
+        #         if match != DEFAULT_DIRECTORY:
+        #             settings["playlist"] = DEFAULT_DIRECTORY + "/" + match
+        #             settings["repeat"] = False
+        #             settings["reload"] = True
+        #             pygame.mixer.music.stop()
+        #             break
+        #         else:
+        #             settings["playlist"] = DEFAULT_DIRECTORY
+        #             settings["repeat"] = False
+        #             settings["reload"] = True
+        #             pygame.mixer.music.stop()
+        #             break
+        #     else:
+        #         print("Unable to find playlist")
         elif cmd.startswith("play "):
             song_name = cmd[len("play "):].strip()
             match = search_song(song_name)
@@ -614,24 +616,16 @@ async def user_conts():
             song_directory = ((settings["song_dict"])[settings["count"]])[0] #current song
             # print(song_directory)
             display_lyrics(song_directory)
+            
+        elif cmd.startswith("playlist "):
+            if cmd.startswith("playlist create "):
+                playlist_name = cmd[len("playlist create "):].strip()
+                pl = Playlist()
+                pl.create_playlists(playlist_name)
+            
 
         elif cmd == "test":
-            
-            results = []
-            song_name_list = []
-            
-            for i in range(settings["num_songs"]):
-                song_name_list.append((((settings["song_dict"])[i])[0]).replace(".mp3", ""))
-            
-            for j in song_name_list:
-                # print(i)
-                # print(j)
-                # print(search_web(j + " Genius Lyrics"))
-                results.append(search_web(j + "Genius Lyrics"))
-                time.sleep(3)
-                
-            # for result in results:
-            #     print(result + "\n")
+            initial_database_creation()
             
         elif cmd == "test2":
             database_check()
