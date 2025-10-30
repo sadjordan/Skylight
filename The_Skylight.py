@@ -288,7 +288,7 @@ class Playlist:
         self.selected_playlist = playlist
         print(f"{self.selected_playlist} has been selected!")
     
-    def add_song(self, song): #another function needed to actually get the song file dir
+    def add_song(self, song): #functional
         if self.selection_check():
             print("No playlist selected!") #add command for selecting playlist
             return
@@ -301,26 +301,32 @@ class Playlist:
         WHERE file_directory = ?
         """, (song,))
         
-        song_pk = cursor.fetchall()
+        song_pk = str(((cursor.fetchall())[0])[0])
+        print(f"song_pk = {song_pk}")
         
         cursor.execute("""
         SELECT playlist_song FROM playlist
         WHERE playlist_name = ?
-        """, (self.selected_playlist))
+        """, (self.selected_playlist,))
         
-        playlist_songs = cursor.fetchall() #Im pretty sure this returns tuples but need to test
+        playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
+        if playlist_songs == None:
+            playlist_songs = ""
+        print(f"playlist_songs = {playlist_songs}")
+
         
-        playlist_songs = playlist_songs + song_pk + "," #test
+        playlist_songs = playlist_songs + song_pk + "," 
+        print(f"playlist_songs2 = {playlist_songs}")
         
         cursor.execute("""
             UPDATE playlist
             SET playlist_song = ?
             WHERE playlist_name = ?
-            """, ("TBA", self.selected_playlist)
+            """, (playlist_songs, self.selected_playlist)
         )
         
         #uncommit later on
-        # conn.commit() 
+        conn.commit() 
         conn.close()
     
     #To add:
@@ -351,7 +357,7 @@ async def play_song(song):
     except Exception as e:
         print(f"Error playing audio: {e}")
         
-async def user_conts():
+async def user_conts(pl : Playlist):    
     while True:
         cmd = await asyncio.get_event_loop().run_in_executor(None, input)
         if cmd == " " or cmd == "k":
@@ -620,8 +626,35 @@ async def user_conts():
         elif cmd.startswith("playlist "):
             if cmd.startswith("playlist create "):
                 playlist_name = cmd[len("playlist create "):].strip()
-                pl = Playlist()
+                # pl = Playlist()
                 pl.create_playlists(playlist_name)
+                
+            elif cmd.startswith("playlist select "):
+                playlist_name = cmd[len("playlist select "):].strip()
+                pl.select_playlist(playlist_name)
+                print("test")
+                
+            elif cmd.startswith("playlist add "):
+                song_query = cmd[len("playlist add "):].strip()
+
+                while True:
+                    if song_query == 'x':
+                        print("Operation Cancelled")
+                        break
+                    song_directory = search_song(song_query)
+                    if song_directory == None:
+                        song_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
+                    else:
+                        print(song_directory)
+                        confirmation = input(f"Add {song_directory} to playlist? (yes/no) \n")
+                        if confirmation.lower() == "yes":
+                            pl.add_song(DEFAULT_DIRECTORY + "/" + song_directory)
+                            break
+                        else: 
+                            print("Operation Cancelled")
+                            break
+                        
+                
             
 
         elif cmd == "test":
@@ -688,7 +721,8 @@ async def player():
         
 async def run_player():
     while True:
-        await asyncio.gather(player(), user_conts())
+        pl = Playlist()
+        await asyncio.gather(player(), user_conts(pl))
         
 
 asyncio.run(run_player())
