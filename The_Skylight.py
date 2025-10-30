@@ -328,9 +328,48 @@ class Playlist:
         #uncommit later on
         conn.commit() 
         conn.close()
+        
+    def universal_playlist(self):
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT EXISTS(
+                SELECT 1 FROM playlist WHERE playlist_name =?
+                )
+             """, ("All",))
+        
+        result = ((cursor.fetchall())[0])[0]
+        # print(result)
+        if result == 0:
+            self.create_playlists("All")
+            
+            cursor.execute("""
+            SELECT song_id FROM allsongs
+            """)
+            
+            song_pks = cursor.fetchall()
+            # print(song_pks)
+            
+            for i in range(len(song_pks)): #remove the tuples
+                song_pks[i] = str((song_pks[i])[0])
+                
+            pk_string = ""
+            for pk in song_pks:
+                pk_string += pk + "," 
+                
+            # print(pk_string)
+            cursor.execute("""
+                UPDATE playlist
+                SET playlist_song = ?
+                WHERE playlist_name = ?
+                """, (pk_string, "All")
+            )
+            
+        conn.commit()
+        conn.close()
     
     #To add:
-    # add_song(song)
     # delete_song(song)
     # add_description(description)
     # delete_playlist(playlist)
@@ -658,7 +697,7 @@ async def user_conts(pl : Playlist):
             
 
         elif cmd == "test":
-            initial_database_creation()
+            pl.universal_playlist()
             
         elif cmd == "test2":
             database_check()
@@ -722,6 +761,7 @@ async def player():
 async def run_player():
     while True:
         pl = Playlist()
+        pl.universal_playlist() #in process of switching to playlist-based playing
         await asyncio.gather(player(), user_conts(pl))
         
 
