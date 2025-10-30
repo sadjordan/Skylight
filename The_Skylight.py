@@ -128,7 +128,18 @@ def initial_database_creation(): #database added in lyrics update
     #     conn.commit()
     # conn.close() 
     
-def database_check(): #database added in lyrics update
+def database_check(): #updated to scan instead of rely on dict, need to check if it works
+    songs =  [f for f in os.listdir(settings["playlist"]) if f.endswith('.mp3')]
+    
+    file_directory = []
+    
+    for song in songs: #song paths
+        decoded_song = unquote(song) 
+        song_path = os.path.join(settings["playlist"], decoded_song)
+        # (settings["song_names"]).append(decoded_song)
+        file_directory.append(song_path) #contains music/song_name.mp3 etc.
+    
+    
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
@@ -138,29 +149,45 @@ def database_check(): #database added in lyrics update
     # print(db_file_list)
     added_count = 0
     
+    #also made it add it to the default playlist
     for i in range(settings["num_songs"]):
-        
-        file_directory = ((settings["song_dict"])[i])[1]
         if file_directory not in db_file_list:
             # temp += 1
             # print(temp)
             cursor.execute("""
-            INSERT INTO allsongs (file_directory)
-            VALUES (?)
+                INSERT INTO allsongs (file_directory)
+                VALUES (?)
             """, (file_directory,))
-            # print("success")
+            
+            cursor.execute("""
+                SELECT song_id FROM allsongs
+                WHERE file_directory = ?
+                """, (file_directory,))
+            
+            song_pk = str(((cursor.fetchall())[0])[0])
+            
+            cursor.execute("""
+                SELECT playlist_song FROM playlist
+                WHERE playlist_name = ?
+                """, ("default",))
+                
+            playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
+            if playlist_songs == None:
+                playlist_songs = ""
+            print(f"playlist_songs = {playlist_songs}")
+
+            
+            playlist_songs = playlist_songs + song_pk + "," 
+            print(f"playlist_songs2 = {playlist_songs}")
+            
+            cursor.execute("""
+                UPDATE playlist
+                SET playlist_song = ?
+                WHERE playlist_name = ?
+                """, (playlist_songs, "default")
+            )
             added_count += 1
             
-        
-        # print(file_directory)
-        # cursor.execute("""
-        #     INSERT INTO allsongs (file_directory)
-        #     VALUES (?)
-        # """, (((settings["song_dict"])[i])[1],))
-    
-    #need to call the dictionary and run a check against the database to delect 
-    #songs with no entry in the database
-    
     print(f"Songs added to database {added_count}")
 
     conn.commit()
@@ -337,12 +364,12 @@ class Playlist:
             SELECT EXISTS(
                 SELECT 1 FROM playlist WHERE playlist_name =?
                 )
-             """, ("All",))
+             """, ("default",))
         
         result = ((cursor.fetchall())[0])[0]
         # print(result)
         if result == 0:
-            self.create_playlists("All")
+            self.create_playlists("default")
             
             cursor.execute("""
             SELECT song_id FROM allsongs
@@ -363,7 +390,7 @@ class Playlist:
                 UPDATE playlist
                 SET playlist_song = ?
                 WHERE playlist_name = ?
-                """, (pk_string, "All")
+                """, (pk_string, "default")
             )
             
         conn.commit()
@@ -704,26 +731,74 @@ async def user_conts(pl : Playlist):
             
             
             
-async def player():
-    songs =  [f for f in os.listdir(settings["playlist"]) if f.endswith('.mp3')]
+async def player(pl : Playlist):
+    # songs =  [f for f in os.listdir(settings["playlist"]) if f.endswith('.mp3')]
     
-    song_paths = []
+    # song_paths = []
     
+    # queue_order = 0
+    
+    # for song in songs: #song paths
+    #     decoded_song = unquote(song) 
+    #     song_path = os.path.join(settings["playlist"], decoded_song)
+    #     # (settings["song_names"]).append(decoded_song)
+    #     song_paths.append(song_path)
+        
+    #     (settings["song_dict"])[queue_order] = (decoded_song, song_path)
+    #     queue_order += 1
+    #     settings["num_songs"]+=1
+    #     if settings["debug"]:
+    #         print("num_songs_main is: " + str(settings["num_songs"]))
+    
+    # song_paths = []
+    
+    database_check() #check if any songs are not in the database
+
+    
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT playlist_song FROM playlist
+    WHERE playlist_name = ?
+    """, ("default",))
+    
+    song_pk = ((cursor.fetchall())[0])[0]
+    # print(f"song_pk = {song_pk}")
+    
+    pk_list = song_pk.split(",")
+    pk_list.pop()
+    # print(pk_list)
+    
+    placeholders = ",".join("(?, ?)" for _ in pk_list)
+    sql = f"""
+    WITH ids(id, ord) AS (VALUES {placeholders})
+    SELECT a.file_directory
+    FROM allsongs AS a
+    JOIN ids ON a.song_id = ids.id
+    ORDER BY ids.ord;
+    """
+    params = []
+    for i, pk in enumerate(pk_list):
+        params.extend((pk, i))
+
+    cursor.execute(sql, params)
+    file_dirs = [row[0] for row in cursor.fetchall()]
+    
+    # print(len(file_dirs))
+    # print(file_dirs)
+    
+    settings["num_songs"] = len(file_dirs)
+
     queue_order = 0
     
-    for song in songs: #song paths
-        decoded_song = unquote(song) 
-        song_path = os.path.join(settings["playlist"], decoded_song)
-        # (settings["song_names"]).append(decoded_song)
-        song_paths.append(song_path)
-        
-        (settings["song_dict"])[queue_order] = (decoded_song, song_path)
+    for song_dir in file_dirs:
+        (settings["song_dict"])[queue_order] = (song_dir[len(DEFAULT_DIRECTORY + "/"):].strip(), song_dir)
         queue_order += 1
-        settings["num_songs"]+=1
-        if settings["debug"]:
-            print("num_songs_main is: " + str(settings["num_songs"]))
+        # settings["num_songs"]+=1 no need to count anymore
+        
+        print(f"settings {settings['num_songs']}")
             
-    database_check() #check if any songs are not in the database
         
     print("Queue: ")
     # queue_count = 0
@@ -732,7 +807,7 @@ async def player():
         print(f"    {song}. {((settings["song_dict"])[song - 1])[0]}")
     print()
     
-    while True:
+    while True: #the main player loop
         if settings["debug"]: 
             print(settings["num_songs"])
         if settings["count"] >= settings["num_songs"]:
@@ -762,7 +837,7 @@ async def run_player():
     while True:
         pl = Playlist()
         pl.universal_playlist() #in process of switching to playlist-based playing
-        await asyncio.gather(player(), user_conts(pl))
+        await asyncio.gather(player(pl), user_conts(pl))
         
 
 asyncio.run(run_player())
