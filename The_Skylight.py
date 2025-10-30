@@ -721,6 +721,35 @@ async def user_conts(pl : Playlist):
                         else: 
                             print("Operation Cancelled")
                             break
+            elif cmd.startswith("playlist switch "):
+                playlist_query = cmd[len("playlist switch "):].strip()
+                
+                conn = sqlite3.connect(DB_FILE)
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                        SELECT playlist_name FROM playlist
+                    """)
+                
+                playlists = [row[0] for row in cursor.fetchall()]
+                
+                match = search_query(playlist_query, playlists)
+                if match:
+                    if match != settings["playlist"]:
+                        settings["playlist"] = match
+                        settings["repeat"] = False
+                        settings["reload"] = True
+                        pygame.mixer.music.stop()
+                        break
+                    else:
+                        print("You are already listening to the playlist!")
+                else:
+                    print("Unable to find playlist")
+                                    
+            #     playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
+            #     playlists.append(DEFAULT_DIRECTORY)
+                
+            #     playlist_query = cmd[len("playlist "):].strip()
                         
                 
             
@@ -763,7 +792,7 @@ async def player(pl : Playlist):
     cursor.execute("""
     SELECT playlist_song FROM playlist
     WHERE playlist_name = ?
-    """, (DEFAULT_PLAYLIST,))
+    """, (settings["playlist"],))
     
     song_pk = ((cursor.fetchall())[0])[0]
     # print(f"song_pk = {song_pk}")
@@ -798,8 +827,6 @@ async def player(pl : Playlist):
         (settings["song_dict"])[queue_order] = (song_dir[len(DEFAULT_DIRECTORY + "/"):].strip(), song_dir)
         queue_order += 1
         # settings["num_songs"]+=1 no need to count anymore
-        
-        print(f"settings {settings['num_songs']}")
             
         
     print("Queue: ")
