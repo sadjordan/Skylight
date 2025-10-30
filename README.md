@@ -24,6 +24,9 @@ In-progress features: Version 0.2 Song storage overhaul
     - Times skipped
     - Genre/ tags
 
+- Reform of player
+    - Plays based on playlist instead of manually scanning the .mp3 in the music folder.
+
 
 
 Future features:
