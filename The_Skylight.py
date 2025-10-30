@@ -15,11 +15,13 @@ import datetime
 random.seed(time.time())
 
 DEFAULT_DIRECTORY = "music"
+DEFAULT_PLAYLIST = "default"
 SEARCH_ENGINE = f"https://duckduckgo.com/html/?q="
 DB_FILE = 'songs.db'
 
+
 settings = {"debug" : False,
-            "playlist" : DEFAULT_DIRECTORY, #replaced with default playlist
+            "playlist" : DEFAULT_PLAYLIST, #replaced with default playlist
             "reload" : False, #if true the player will restart, use when adding more songs or any cases where the player must restart without terminating the instance
             "paused" : False, 
             "num_songs" : 0, #this is a count of the number of songs, only modified once when initialised or restarted
@@ -129,13 +131,13 @@ def initial_database_creation(): #database added in lyrics update
     # conn.close() 
     
 def database_check(): #updated to scan instead of rely on dict, need to check if it works
-    songs =  [f for f in os.listdir(settings["playlist"]) if f.endswith('.mp3')]
+    songs =  [f for f in os.listdir(DEFAULT_DIRECTORY) if f.endswith('.mp3')]
     
     file_directory = []
     
     for song in songs: #song paths
         decoded_song = unquote(song) 
-        song_path = os.path.join(settings["playlist"], decoded_song)
+        song_path = os.path.join(DEFAULT_DIRECTORY, decoded_song)
         # (settings["song_names"]).append(decoded_song)
         file_directory.append(song_path) #contains music/song_name.mp3 etc.
     
@@ -169,7 +171,7 @@ def database_check(): #updated to scan instead of rely on dict, need to check if
             cursor.execute("""
                 SELECT playlist_song FROM playlist
                 WHERE playlist_name = ?
-                """, ("default",))
+                """, (DEFAULT_PLAYLIST,))
                 
             playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
             if playlist_songs == None:
@@ -184,7 +186,7 @@ def database_check(): #updated to scan instead of rely on dict, need to check if
                 UPDATE playlist
                 SET playlist_song = ?
                 WHERE playlist_name = ?
-                """, (playlist_songs, "default")
+                """, (playlist_songs, DEFAULT_PLAYLIST)
             )
             added_count += 1
             
@@ -260,7 +262,7 @@ def lyric_extraction(artist, song_name, file_directory):
     conn.close()
 
 def display_lyrics(filename): #input is file name
-    file_directory = settings["playlist"] + "/" + filename
+    file_directory = DEFAULT_DIRECTORY + "/" + filename
     
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -364,12 +366,12 @@ class Playlist:
             SELECT EXISTS(
                 SELECT 1 FROM playlist WHERE playlist_name =?
                 )
-             """, ("default",))
+             """, (DEFAULT_PLAYLIST,))
         
         result = ((cursor.fetchall())[0])[0]
         # print(result)
         if result == 0:
-            self.create_playlists("default")
+            self.create_playlists(DEFAULT_PLAYLIST)
             
             cursor.execute("""
             SELECT song_id FROM allsongs
@@ -390,7 +392,7 @@ class Playlist:
                 UPDATE playlist
                 SET playlist_song = ?
                 WHERE playlist_name = ?
-                """, (pk_string, "default")
+                """, (pk_string, DEFAULT_PLAYLIST)
             )
             
         conn.commit()
@@ -761,7 +763,7 @@ async def player(pl : Playlist):
     cursor.execute("""
     SELECT playlist_song FROM playlist
     WHERE playlist_name = ?
-    """, ("default",))
+    """, (DEFAULT_PLAYLIST,))
     
     song_pk = ((cursor.fetchall())[0])[0]
     # print(f"song_pk = {song_pk}")
