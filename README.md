@@ -67,5 +67,9 @@ Future features:
     - Current if-else system is getting lengthy
     - Command registry system
 
+- Discord bot implementation
+
+- Mobile app with bluetooth-enabled or network-enabled syncing with my laptop
+
 Bugs:
 - Not really a bug but the search service is imprecise at times, should find a replacement similar to the 'z' used in terminal.
