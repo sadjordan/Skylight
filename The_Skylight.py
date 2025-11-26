@@ -293,6 +293,17 @@ def display_lyrics(filename): #input is file name
     else:
         print("No lyrics found for this song")
         
+def song_from_index(song_query, output="name"):
+                if output == "name":
+                    index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]
+                    selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
+                    return selected_song
+                elif output == "index":
+                    index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]  #need to loop this to prevent index error
+                    return index
+                else:
+                    print("Unknown output function used")
+        
 class Playlist:
     def __init__(self):
         self.selected_playlist = "None"
@@ -319,6 +330,21 @@ class Playlist:
     
     def selection_check(self):
         return self.selected_playlist == "None"
+    
+    def playlist_list(self):
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+                SELECT playlist_name FROM playlist
+            """)
+        
+        playlists = [row[0] for row in cursor.fetchall()]
+        # print(playlists)
+        conn.close()
+        
+        return playlists
+        
         
     def playlist_search(self, playlist_query): #develop search function for playlists
         conn = sqlite3.connect(DB_FILE)
@@ -331,6 +357,8 @@ class Playlist:
         playlists = [row[0] for row in cursor.fetchall()]
         
         match = search_query(playlist_query, playlists)
+        
+        conn.close()
         
         return match
     
@@ -581,15 +609,22 @@ async def user_conts(pl : Playlist):
         #         print("Unable to find playlist")
         elif cmd.startswith("play "):
             song_name = cmd[len("play "):].strip()
-            match = search_song(song_name)
-            if match:
-                for i in range(settings["num_songs"]):
-                    if (settings["song_dict"][i][0] == match):
-                        settings["count"] = i - 1
-                        pygame.mixer.music.stop()
-                        break
+            
+            if (song_name.strip()).isdigit() and int(song_name.strip()) <= settings["num_songs"]:
+                match = song_from_index(song_name, output="index")
+                settings["count"] = match - 1
+                pygame.mixer.music.stop()
             else:
-                print("Unable to find song")
+                match = search_song(song_name)
+                if match:
+                    for i in range(settings["num_songs"]):
+                        if (settings["song_dict"][i][0] == match):
+                            settings["count"] = i - 1
+                            pygame.mixer.music.stop()
+                            break
+                else:
+                    print("Unable to find song")
+            
         elif cmd.startswith("query "):
             yt_query = cmd[len("query "):].strip()
             ytSearch = VideosSearch(yt_query, limit = 10)
@@ -720,8 +755,13 @@ async def user_conts(pl : Playlist):
             # print(song_directory)
             display_lyrics(song_directory)
             
-        elif cmd.startswith("playlist "):
-            if cmd.startswith("playlist create "):
+        elif cmd.startswith("playlist"):
+            if cmd == "playlist":
+                playlists = pl.playlist_list()
+                print()
+                for playlist in playlists: print(playlist)
+                
+            elif cmd.startswith("playlist create "):
                 playlist_name = cmd[len("playlist create "):].strip()
                 # pl = Playlist()
                 pl.create_playlists(playlist_name)
@@ -733,10 +773,8 @@ async def user_conts(pl : Playlist):
             elif cmd.startswith("playlist add "):
                 song_query = cmd[len("playlist add "):].strip()
                 print(settings["num_songs"])
-                
-
                 while True:
-                    if (song_query.strip()).isdigit() and int(song_query.strip()) < settings["num_songs"]:
+                    if (song_query.strip()).isdigit() and int(song_query.strip()) <= settings["num_songs"]:
                         index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]
                         selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
                         confirmation = input(f"Add {selected_song} to playlist? (yes/no) \n")
