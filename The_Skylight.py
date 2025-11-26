@@ -500,18 +500,78 @@ class Playlist:
             """, (playlist_songs, self.selected_playlist)
         )
         
-        # conn.commit() 
+        conn.commit() 
         conn.close()
-    
         
-    
+    def add_playlist_description(self):
+        editing = False
+        
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT playlist_description FROM playlist
+        WHERE playlist_name = ?
+        """, (self.selected_playlist,))
+        
+        playlist_description = ((cursor.fetchall())[0])[0]
+        
+        if playlist_description:
+            print(f"Current playlist description for {self.selected_playlist}:")
+            print(playlist_description)
+            print("—————————————————————————————————————————————")
+            editing_question = input("Would you like to edit the description or start from scratch? (yes/no for editing)")
+            if editing_question.lower() == "yes" or "y":
+                editing = True
+                print("You are now in Edit mode")
+            else:
+                editing = False
+                
+        # print(editing)
+        if editing == True:
+            print("Editing feature in development")
+            return
+        
+        description = input("Write your new description below, click enter to submit: \n")
+        
+        confirmation = input(f"Confirm you would like to set the following as your new playlist description (yes/no) \n {description} \n")
+        
+        if confirmation.lower == "yes" or "y":
+            cursor.execute("""
+                UPDATE playlist
+                SET playlist_description = ?
+                WHERE playlist_name = ?
+                """, (description, self.selected_playlist)
+            )
+            
+            print("Playlist description updated!")
+        else: 
+            print("Operation Cancelled")
+            return
+        
+        conn.commit() 
+        conn.close()
+        
+    def display_playlist_description(self):
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT playlist_description FROM playlist
+        WHERE playlist_name = ?
+        """, (self.selected_playlist,))
+        
+        playlist_description = ((cursor.fetchall())[0])[0]
+        
+        conn.close()
+        
+        return playlist_description
         
     
     #To add:
-    # delete_song(song)
-    # add_description(description)
-    # delete_playlist(playlist)
-    # describe_playlist(playlist) #for showing all data
+    # delete_playlist(playlist) 
+        # just add a delete flag and use that easy peesy, but need to implement it such that all functions will ignore it if it has the flag
+    # describe_playlist(playlist, total=false) #for showing all data, total = true will show all songs in the playlist, otherwise just show all other details
         
     #     cursor.execute("""
     # CREATE TABLE IF NOT EXISTS playlist (
@@ -884,11 +944,8 @@ async def user_conts(pl : Playlist):
                         if confirmation.lower() == "yes":
                             pl.delete_song(DEFAULT_DIRECTORY + "/" + song_directory)
                         else:
-                            print("Operation Cancelled")
-                    
-                
-                
-                
+                            print("Operation Cancelled")    
+            
             elif cmd.startswith("playlist switch "):
                 playlist_query = cmd[len("playlist switch "):].strip()
                 
@@ -913,6 +970,14 @@ async def user_conts(pl : Playlist):
                         print("You are already listening to the playlist!")
                 else:
                     print("Unable to find playlist")
+                    
+            elif cmd.startswith("playlist description"):
+                if cmd == "playlist description":
+                    print(f"Description for {pl.selected_playlist}:")
+                    print(pl.display_playlist_description())
+                    print("————————————————————————————————————————————————")
+                elif cmd == "playlist description -e":
+                    pl.add_playlist_description()
                                     
             #     playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
             #     playlists.append(DEFAULT_DIRECTORY)
