@@ -294,15 +294,18 @@ def display_lyrics(filename): #input is file name
         print("No lyrics found for this song")
         
 def song_from_index(song_query, output="name"):
-                if output == "name":
-                    index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]
-                    selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
-                    return selected_song
-                elif output == "index":
-                    index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]  #need to loop this to prevent index error
-                    return index
-                else:
-                    print("Unknown output function used")
+    if output == "name":
+        index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]
+        selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
+        return selected_song
+    elif output == "index":
+        if settings["count"] == 0: #exists because for some reason there is an issue with positioning when index is not 0
+            index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]  #need to loop this to prevent index error
+        else:
+            index = (int(song_query) + settings["count"]) % settings["num_songs"]
+        return index
+    else:
+        print("Unknown output function used")
         
 class Playlist:
     def __init__(self):
@@ -362,6 +365,46 @@ class Playlist:
         
         return match
     
+    def universal_playlist(self):
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT EXISTS(
+                SELECT 1 FROM playlist WHERE playlist_name =?
+                )
+             """, (DEFAULT_PLAYLIST,))
+        
+        result = ((cursor.fetchall())[0])[0]
+        # print(result)
+        if result == 0:
+            self.create_playlists(DEFAULT_PLAYLIST)
+            
+            cursor.execute("""
+            SELECT song_id FROM allsongs
+            """)
+            
+            song_pks = cursor.fetchall()
+            # print(song_pks)
+            
+            for i in range(len(song_pks)): #remove the tuples
+                song_pks[i] = str((song_pks[i])[0])
+                
+            pk_string = ""
+            for pk in song_pks:
+                pk_string += pk + "," 
+                
+            # print(pk_string)
+            cursor.execute("""
+                UPDATE playlist
+                SET playlist_song = ?
+                WHERE playlist_name = ?
+                """, (pk_string, DEFAULT_PLAYLIST)
+            )
+            
+        conn.commit()
+        conn.close()
+    
     def select_playlist(self, playlist_name): #select a playlist for editing
         match = self.playlist_search(playlist_name)
         if match:
@@ -407,49 +450,62 @@ class Playlist:
             """, (playlist_songs, self.selected_playlist)
         )
         
-        #uncommit later on
         conn.commit() 
         conn.close()
+    
+    def delete_song(self, song): #accepting index only
+        if self.selection_check():
+            print("No playlist selected!") #add command for selecting playlist
+            return
         
-    def universal_playlist(self):
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT EXISTS(
-                SELECT 1 FROM playlist WHERE playlist_name =?
-                )
-             """, (DEFAULT_PLAYLIST,))
+        SELECT song_id FROM allsongs
+        WHERE file_directory = ?
+        """, (song,))
         
-        result = ((cursor.fetchall())[0])[0]
-        # print(result)
-        if result == 0:
-            self.create_playlists(DEFAULT_PLAYLIST)
-            
-            cursor.execute("""
-            SELECT song_id FROM allsongs
-            """)
-            
-            song_pks = cursor.fetchall()
-            # print(song_pks)
-            
-            for i in range(len(song_pks)): #remove the tuples
-                song_pks[i] = str((song_pks[i])[0])
-                
-            pk_string = ""
-            for pk in song_pks:
-                pk_string += pk + "," 
-                
-            # print(pk_string)
-            cursor.execute("""
-                UPDATE playlist
-                SET playlist_song = ?
-                WHERE playlist_name = ?
-                """, (pk_string, DEFAULT_PLAYLIST)
-            )
-            
-        conn.commit()
+        try:
+            song_pk = str(((cursor.fetchall())[0])[0])
+        except:
+            print("Song not found in playlist")
+        # print(f"song_pk = {song_pk}")
+        
+        cursor.execute("""
+        SELECT playlist_song FROM playlist
+        WHERE playlist_name = ?
+        """, (self.selected_playlist,))
+        
+        playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
+        if playlist_songs == None:
+            # playlist_songs = ""
+            print("There are no songs in the playlist!")
+            return
+        # print(f"playlist_songs = {playlist_songs}")
+
+        playlist_songs = playlist_songs + song_pk + "," 
+        
+        #removing the string specified
+        
+        playlist_songs_list = playlist_songs.split(",")
+        print(playlist_songs_list)
+        
+        # print(f"playlist_songs2 = {playlist_songs}")
+        
+        cursor.execute("""
+            UPDATE playlist
+            SET playlist_song = ?
+            WHERE playlist_name = ?
+            """, (playlist_songs, self.selected_playlist)
+        )
+        
+        # conn.commit() 
         conn.close()
+    
+        
+    
+        
     
     #To add:
     # delete_song(song)
@@ -608,7 +664,7 @@ async def user_conts(pl : Playlist):
         #     else:
         #         print("Unable to find playlist")
         elif cmd.startswith("play "):
-            song_name = cmd[len("play "):].strip()
+            song_name = cmd[len("play "):].strip() #song_name doesn't necessarily have to be a name, could a number
             
             if (song_name.strip()).isdigit() and int(song_name.strip()) <= settings["num_songs"]:
                 match = song_from_index(song_name, output="index")
@@ -834,10 +890,19 @@ async def user_conts(pl : Playlist):
             
 
         elif cmd == "test":
-            pl.universal_playlist()
+            pl.delete_song(1)
             
         elif cmd == "test2":
             database_check()
+            
+        #debug
+        
+        elif cmd == "num_songs":
+            print(settings["num_songs"])
+        elif cmd == "count":
+            print(settings["count"])
+        elif cmd == "song_dict":
+            print(settings["song_dict"])
             
             
             
