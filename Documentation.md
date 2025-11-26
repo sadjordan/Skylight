@@ -6,3 +6,4 @@
     - lyrics.ovh is often down
 
     - Final Flow: Duck duck go search --> song info retrieved --> lyrics.ovh request with song details --> lyrics stored to db
+

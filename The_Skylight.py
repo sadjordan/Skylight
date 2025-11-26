@@ -649,9 +649,9 @@ async def user_conts(pl : Playlist):
                         VALUES (?, ?)
                     """, (file_path, selected_video[1]))
                     
-                    add_song_to_default_playlist_via_file_directory(file_path)
-                    
                     conn.commit()
+                    
+                    add_song_to_default_playlist_via_file_directory(file_path)
                     conn.close()
                     
                 
