@@ -161,37 +161,48 @@ def database_check(): #updated to scan instead of rely on dict, need to check if
                 VALUES (?)
             """, (file_directory,))
             
-            cursor.execute("""
-                SELECT song_id FROM allsongs
-                WHERE file_directory = ?
-                """, (file_directory,))
+            add_song_to_default_playlist_via_file_directory(file_directory)
             
-            song_pk = str(((cursor.fetchall())[0])[0])
             
-            cursor.execute("""
-                SELECT playlist_song FROM playlist
-                WHERE playlist_name = ?
-                """, (DEFAULT_PLAYLIST,))
-                
-            playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
-            if playlist_songs == None:
-                playlist_songs = ""
-            print(f"playlist_songs = {playlist_songs}")
-
-            
-            playlist_songs = playlist_songs + song_pk + "," 
-            print(f"playlist_songs2 = {playlist_songs}")
-            
-            cursor.execute("""
-                UPDATE playlist
-                SET playlist_song = ?
-                WHERE playlist_name = ?
-                """, (playlist_songs, DEFAULT_PLAYLIST)
-            )
             added_count += 1
             
     print(f"Songs added to database {added_count}")
 
+    conn.commit()
+    conn.close()
+    
+def add_song_to_default_playlist_via_file_directory(file_directory):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT song_id FROM allsongs
+        WHERE file_directory = ?
+        """, (file_directory,))
+
+    song_pk = str(((cursor.fetchall())[0])[0])
+
+    cursor.execute("""
+        SELECT playlist_song FROM playlist
+        WHERE playlist_name = ?
+        """, (DEFAULT_PLAYLIST,))
+        
+    playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
+    if playlist_songs == None:
+        playlist_songs = ""
+    print(f"playlist_songs = {playlist_songs}")
+
+
+    playlist_songs = playlist_songs + song_pk + "," 
+    print(f"playlist_songs2 = {playlist_songs}")
+
+    cursor.execute("""
+        UPDATE playlist
+        SET playlist_song = ?
+        WHERE playlist_name = ?
+        """, (playlist_songs, DEFAULT_PLAYLIST)
+    )
+    
     conn.commit()
     conn.close()
     
@@ -309,13 +320,27 @@ class Playlist:
     def selection_check(self):
         return self.selected_playlist == "None"
         
-    def playlist_search(self, playlist): #develop search function for playlists
-        return playlist
+    def playlist_search(self, playlist_query): #develop search function for playlists
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+                SELECT playlist_name FROM playlist
+            """)
+        
+        playlists = [row[0] for row in cursor.fetchall()]
+        
+        match = search_query(playlist_query, playlists)
+        
+        return match
     
-    def select_playlist(self, playlist): #select a playlist for editing
-        #add a function here to connect to the playlist search
-        self.selected_playlist = playlist
-        print(f"{self.selected_playlist} has been selected!")
+    def select_playlist(self, playlist_name): #select a playlist for editing
+        match = self.playlist_search(playlist_name)
+        if match:
+            self.selected_playlist = match
+            print(f"{self.selected_playlist} has been selected!")
+        else:
+            print("Unable to find playlist")
     
     def add_song(self, song): #functional
         if self.selection_check():
@@ -331,7 +356,7 @@ class Playlist:
         """, (song,))
         
         song_pk = str(((cursor.fetchall())[0])[0])
-        print(f"song_pk = {song_pk}")
+        # print(f"song_pk = {song_pk}")
         
         cursor.execute("""
         SELECT playlist_song FROM playlist
@@ -341,11 +366,11 @@ class Playlist:
         playlist_songs = ((cursor.fetchall())[0])[0] #this could return none
         if playlist_songs == None:
             playlist_songs = ""
-        print(f"playlist_songs = {playlist_songs}")
+        # print(f"playlist_songs = {playlist_songs}")
 
         
         playlist_songs = playlist_songs + song_pk + "," 
-        print(f"playlist_songs2 = {playlist_songs}")
+        # print(f"playlist_songs2 = {playlist_songs}")
         
         cursor.execute("""
             UPDATE playlist
@@ -624,8 +649,12 @@ async def user_conts(pl : Playlist):
                         VALUES (?, ?)
                     """, (file_path, selected_video[1]))
                     
+                    add_song_to_default_playlist_via_file_directory(file_path)
+                    
                     conn.commit()
                     conn.close()
+                    
+                
             else: 
                 print("Operation cancelled")
         elif cmd == "reload":
@@ -700,20 +729,32 @@ async def user_conts(pl : Playlist):
             elif cmd.startswith("playlist select "):
                 playlist_name = cmd[len("playlist select "):].strip()
                 pl.select_playlist(playlist_name)
-                print("test")
                 
             elif cmd.startswith("playlist add "):
                 song_query = cmd[len("playlist add "):].strip()
+                print(settings["num_songs"])
+                
 
                 while True:
+                    if (song_query.strip()).isdigit() and int(song_query.strip()) < settings["num_songs"]:
+                        index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]
+                        selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
+                        confirmation = input(f"Add {selected_song} to playlist? (yes/no) \n")
+                        if confirmation.lower() == "yes":
+                            pl.add_song(DEFAULT_DIRECTORY + "/" + selected_song)
+                            break
+                        else: 
+                            print("Operation Cancelled")
+                            break
+                        
                     if song_query == 'x':
                         print("Operation Cancelled")
                         break
                     song_directory = search_song(song_query)
                     if song_directory == None:
-                        song_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
+                        song_query = input("Unable to find song, please enter the song you want to add (enter x to quit): ")
                     else:
-                        print(song_directory)
+                        # print(song_directory)
                         confirmation = input(f"Add {song_directory} to playlist? (yes/no) \n")
                         if confirmation.lower() == "yes":
                             pl.add_song(DEFAULT_DIRECTORY + "/" + song_directory)
