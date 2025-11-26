@@ -299,10 +299,13 @@ def song_from_index(song_query, output="name"):
         selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
         return selected_song
     elif output == "index":
-        if settings["count"] == 0: #exists because for some reason there is an issue with positioning when index is not 0
-            index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]  #need to loop this to prevent index error
-        else:
-            index = (int(song_query) + settings["count"]) % settings["num_songs"]
+        # if settings["count"] == 0: #exists because for some reason there is an issue with positioning when index is not 0
+        #     index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]  #need to loop this to prevent index error
+        # else:
+        
+        #the above was commented out because i realised the initial display upon starting or reloading shows all the songs and thsu was the cause of the issue
+        
+        index = (int(song_query) + settings["count"]) % settings["num_songs"]
         return index
     else:
         print("Unknown output function used")
@@ -453,7 +456,7 @@ class Playlist:
         conn.commit() 
         conn.close()
     
-    def delete_song(self, song): #accepting index only
+    def delete_song(self, song_index): #accepting file names only
         if self.selection_check():
             print("No playlist selected!") #add command for selecting playlist
             return
@@ -464,7 +467,7 @@ class Playlist:
         cursor.execute("""
         SELECT song_id FROM allsongs
         WHERE file_directory = ?
-        """, (song,))
+        """, (song_index,))
         
         try:
             song_pk = str(((cursor.fetchall())[0])[0])
@@ -482,16 +485,13 @@ class Playlist:
             # playlist_songs = ""
             print("There are no songs in the playlist!")
             return
-        # print(f"playlist_songs = {playlist_songs}")
+        print(f"playlist_songs = {playlist_songs}")
 
-        playlist_songs = playlist_songs + song_pk + "," 
-        
         #removing the string specified
         
-        playlist_songs_list = playlist_songs.split(",")
-        print(playlist_songs_list)
+        playlist_songs = playlist_songs.replace(f",{song_pk},", ",")
         
-        # print(f"playlist_songs2 = {playlist_songs}")
+        print(f"playlist_songs2 = {playlist_songs}")
         
         cursor.execute("""
             UPDATE playlist
@@ -828,10 +828,10 @@ async def user_conts(pl : Playlist):
                 
             elif cmd.startswith("playlist add "):
                 song_query = cmd[len("playlist add "):].strip()
-                print(settings["num_songs"])
+                # print(settings["num_songs"])
                 while True:
                     if (song_query.strip()).isdigit() and int(song_query.strip()) <= settings["num_songs"]:
-                        index = (int(song_query) - 1 + settings["count"]) % settings["num_songs"]
+                        index = (int(song_query) + settings["count"]) % settings["num_songs"]
                         selected_song = ((settings["song_dict"])[index])[0]  #need to loop this to prevent index error
                         confirmation = input(f"Add {selected_song} to playlist? (yes/no) \n")
                         if confirmation.lower() == "yes":
@@ -856,6 +856,39 @@ async def user_conts(pl : Playlist):
                         else: 
                             print("Operation Cancelled")
                             break
+                        
+            elif cmd.startswith("playlist remove "): #index search has the 0 error issue
+                song_query = cmd[len("playlist remove "):].strip()
+                if (song_query.strip()).isdigit() and int(song_query.strip()) <= settings["num_songs"]:
+                    song_directory = ""
+                    if settings["count"] != 0:
+                        song_directory = song_from_index(int(song_query) + 1)
+                    else:
+                        song_directory = song_from_index(song_query)
+                    
+                    # print("song directory: " + song_directory)
+                    
+                    confirmation = input(f"Delete {song_directory} from playlist {pl.selected_playlist}? (yes/no) \n")
+                    if confirmation.lower() == "yes":
+                        pl.delete_song(DEFAULT_DIRECTORY + "/" + song_directory)
+                    else:
+                        print("Operation Cancelled")
+                        
+                else:
+                    song_directory = search_song(song_query)
+                    if song_directory == None:
+                        print("Unable to find song; operation cancelled")
+                    else:
+                        # print(song_directory)
+                        confirmation = input(f"Delete {song_directory} from playlist {pl.selected_playlist}? (yes/no) \n")
+                        if confirmation.lower() == "yes":
+                            pl.delete_song(DEFAULT_DIRECTORY + "/" + song_directory)
+                        else:
+                            print("Operation Cancelled")
+                    
+                
+                
+                
             elif cmd.startswith("playlist switch "):
                 playlist_query = cmd[len("playlist switch "):].strip()
                 
@@ -890,7 +923,7 @@ async def user_conts(pl : Playlist):
             
 
         elif cmd == "test":
-            pl.delete_song(1)
+            pl.delete_song("music/Muse - Starlight [Official Music Video].mp3")
             
         elif cmd == "test2":
             database_check()
