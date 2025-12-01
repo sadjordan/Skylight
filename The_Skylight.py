@@ -114,7 +114,8 @@ def initial_database_creation(): #database added in lyrics update
         playlist_created_on TEXT NOT NULL,
         playlist_switched_to INTEGER NOT NULL,
         playlist_songs_listened INTEGER NOT NULL,
-        playlist_last_accessed TEXT
+        playlist_last_accessed TEXT,
+        deleted INTEGER DEFAULT 0
     )
     """)
 
@@ -336,13 +337,15 @@ class Playlist:
     
     def selection_check(self):
         return self.selected_playlist == "None"
-    
+        
+        
     def playlist_list(self):
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
         
         cursor.execute("""
                 SELECT playlist_name FROM playlist
+                WHERE deleted = 0
             """)
         
         playlists = [row[0] for row in cursor.fetchall()]
@@ -358,6 +361,7 @@ class Playlist:
         
         cursor.execute("""
                 SELECT playlist_name FROM playlist
+                WHERE deleted = 0
             """)
         
         playlists = [row[0] for row in cursor.fetchall()]
@@ -566,6 +570,29 @@ class Playlist:
         conn.close()
         
         return playlist_description
+    
+    def delete_playlist(self):
+        confirmation = input(f"\nAre you sure you want to delete {self.selected_playlist} (yes/no)? \n")
+        
+        if confirmation.lower() not in ("yes" or "y"):
+            return
+        
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        UPDATE playlist
+        SET deleted = 1
+        WHERE playlist_name = ?
+        """, (self.selected_playlist,))
+        
+        conn.commit()
+        conn.close()
+        
+        self.selected_playlist = "None"
+        
+        print("Playlist deleted")
+        
         
     
     #To add:
@@ -743,8 +770,12 @@ async def user_conts(pl : Playlist):
             
         elif cmd.startswith("query "):
             yt_query = cmd[len("query "):].strip()
-            ytSearch = VideosSearch(yt_query, limit = 10)
-            results = ytSearch.result()
+            try:
+                ytSearch = VideosSearch(yt_query, limit = 10)
+                results = ytSearch.result()
+            except Exception as e:
+                print(f"Error querying YouTube: {e}")
+                continue
             
             top_video = results['result'][0]
             print("Top result: ")
@@ -949,16 +980,16 @@ async def user_conts(pl : Playlist):
             elif cmd.startswith("playlist switch "):
                 playlist_query = cmd[len("playlist switch "):].strip()
                 
-                conn = sqlite3.connect(DB_FILE)
-                cursor = conn.cursor()
+                # conn = sqlite3.connect(DB_FILE)
+                # cursor = conn.cursor()
                 
-                cursor.execute("""
-                        SELECT playlist_name FROM playlist
-                    """)
+                # cursor.execute("""
+                #         SELECT playlist_name FROM playlist
+                #     """)
                 
-                playlists = [row[0] for row in cursor.fetchall()]
+                # playlists = [row[0] for row in cursor.fetchall()]
+                match = pl.playlist_search(playlist_query)
                 
-                match = search_query(playlist_query, playlists)
                 if match:
                     if match != settings["playlist"]:
                         settings["playlist"] = match
@@ -978,6 +1009,9 @@ async def user_conts(pl : Playlist):
                     print("————————————————————————————————————————————————")
                 elif cmd == "playlist description -e":
                     pl.add_playlist_description()
+                    
+            elif cmd == "playlist delete":
+                pl.delete_playlist()
                                     
             #     playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
             #     playlists.append(DEFAULT_DIRECTORY)
@@ -991,7 +1025,12 @@ async def user_conts(pl : Playlist):
             pl.delete_song("music/Muse - Starlight [Official Music Video].mp3")
             
         elif cmd == "test2":
-            database_check()
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                ALTER TABLE playlist ADD COLUMN deleted INTEGER DEFAULT 0;
+            """)
             
         #debug
         
