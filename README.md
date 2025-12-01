@@ -24,6 +24,8 @@ Future features:
     - Background or automated lyrics extraction to compensate for lyrics.ovh
     - Ability to speed up/ slow down songs
     - Duplication detection
+    - Utilize the newly added meta-data fields
+    - Add playlist description editing
 
 - UI 
     - UI will be used to create playlists and offer playlist management services
@@ -56,3 +58,7 @@ Future features:
 
 Bugs:
 - Not really a bug but the search service is imprecise at times, should find a replacement similar to the 'z' used in terminal.
+- Sometimes for songs with extensive names with parantheses (tell me im okay patrick) the name of the song is saved differently than the file name in the database.
+- Index based search is a bit finnicky
+- Issues with querying (likely) due to issue with the library being used (known error-causing query: maisie peters, say my name in your sleep)
+
