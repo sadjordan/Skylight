@@ -9,26 +9,9 @@ Current features:
 - Playlists
 - Song Downloader
 
-In-progress features: Version 0.2 Song storage overhaul
+In-progress: TBA
 
-- Reform playlists
-    - A single master folder of songs
-    - Metadata of songs stored in the .db
-    - Playlist information stored in database entries structured like <1,18,19, ...> (the numbers being pk's of the songs)
-    - Create, delete playlists
-    - Method to add new songs externally added to the database
-    - Add a new column, "date added" to the database.
-
-- Expanded metadata file
-    - Times listened to
-    - Times skipped
-    - Genre/ tags
-
-- Reform of player
-    - Plays based on playlist instead of manually scanning the .mp3 in the music folder.
-
-
-
+———————————————————————————————————————————————————————————————————————————————————————————
 Future features:
 
 - Chrome extension to analyse Youtube Music song choices
