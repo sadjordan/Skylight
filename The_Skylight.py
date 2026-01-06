@@ -311,6 +311,47 @@ def song_from_index(song_query, output="name"):
     else:
         print("Unknown output function used")
         
+def download_song(link):
+    video_details = ""
+    
+    with yt_dlp.YoutubeDL({}) as ydl:
+        video_details = ydl.extract_info(link, download=False)
+    
+    response = input(f"Would you like to download {video_details['title']} (yes/no) \n?")
+    
+    if response.lower() == "yes":
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': f'{DEFAULT_DIRECTORY}/%(title)s.%(ext)s',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }]
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([(link)])
+            
+            print("\nDownload complete!")
+            
+            file_path = f"{DEFAULT_DIRECTORY}/{video_details['title']}.mp3"
+            
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO allsongs (file_directory, downloaded_from)
+                VALUES (?, ?)
+            """, (file_path, link))
+            
+            conn.commit()
+            
+            add_song_to_default_playlist_via_file_directory(file_path)
+            conn.close()
+    else: 
+        print("Operation cancelled")
+        
 class Playlist:
     def __init__(self):
         self.selected_playlist = "None"
@@ -839,6 +880,14 @@ async def user_conts(pl : Playlist):
                 
             else: 
                 print("Operation cancelled")
+        elif cmd.startswith("download "):
+            link = cmd[len("download "):].strip()
+            
+            try:
+                download_song(link)
+            except Exception as e:
+                print(f"Error downloading: {e}")
+            
         elif cmd == "reload":
             settings["reload"] = True
             settings["repeat"] = False
