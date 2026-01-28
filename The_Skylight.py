@@ -11,6 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 import sqlite3
 import datetime
+import qrcode
 
 random.seed(time.time())
 
@@ -352,6 +353,44 @@ def download_song(link):
     else: 
         print("Operation cancelled")
         
+def create_qr_code(content):
+    if content == '' or content == None:
+        return
+    
+    qr = qrcode.QRCode()
+    qr.add_data(content)
+    qr.make()
+    qr.print_ascii()
+    
+def find_song_id_from_name(filename): #has to be exact file directory
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT song_id FROM allsongs
+    WHERE file_directory = ?
+    """, (filename,))
+    
+    song_pk = str(((cursor.fetchall())[0])[0])
+    
+    conn.close()
+    
+    return song_pk
+
+def find_download_link_from_pk(song_pk):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    SELECT downloaded_from FROM allsongs
+    WHERE song_id = ?
+    """, (song_pk,))
+    
+    link = str(((cursor.fetchall())[0])[0])
+    
+    conn.close()
+    
+    return link
 class Playlist:
     def __init__(self):
         self.selected_playlist = "None"
@@ -387,7 +426,7 @@ class Playlist:
         cursor.execute("""
                 SELECT playlist_name FROM playlist
                 WHERE deleted = 0
-            """)
+            """), (DEFAULT_PLAYLIST,)
         
         playlists = [row[0] for row in cursor.fetchall()]
         # print(playlists)
@@ -1066,10 +1105,23 @@ async def user_conts(pl : Playlist):
             #     playlists.append(DEFAULT_DIRECTORY)
                 
             #     playlist_query = cmd[len("playlist "):].strip()
-                        
-                
             
-
+        elif cmd == "link -c -qr":
+            filename = ((settings["song_dict"])[settings["count"]])[0]
+            filename = "music/" + filename
+            
+            # print(filename)
+            
+            song_pk = find_song_id_from_name(filename)
+            link = find_download_link_from_pk(song_pk)
+            
+            if link == "None":
+                print("No download link found for this song!")
+            else:
+                create_qr_code(link)
+            
+            # create_qr_code()
+                        
         elif cmd == "test":
             pl.delete_song("music/Muse - Starlight [Official Music Video].mp3")
             
