@@ -9,14 +9,17 @@ Current features:
 - Playlists
 - Song Downloader
 
-In-progress: TBA
+In-progress: 
+- Better application file structure; split by responsibility [implement in 0.3?]
+- Refactor Command System
+    - Current if-else system is getting lengthy
+    - Command registry system
+
 
 ———————————————————————————————————————————————————————————————————————————————————————————
 Future features:
 
 - Chrome extension to analyse Youtube Music song choices
-
-- Better application file structure; split by responsibility [implement in 0.3?]
 
 - Quality of Life and other improvements:
     - A help function because I can barely remember all the function keywords and I made this thing
@@ -47,10 +50,6 @@ Future features:
     - Delete or zip songs that have not been listened to in a while
     - Allow user to set storage cap
     - Redundant? Is storage really an issue?
-
-- Refactor Command System
-    - Current if-else system is getting lengthy
-    - Command registry system
 
 - Discord bot implementation
 

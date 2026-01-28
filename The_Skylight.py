@@ -963,27 +963,6 @@ async def user_conts(pl : Playlist):
                 # if lyrics_query != 'x':
             elif cmd == "lyrics -c":
                 song_name_artist_extraction(((settings["song_dict"])[settings["count"]])[0])
-                
-                
-        # """ Kind of a redundant feature since any use would be for the current song"""        
-        # elif cmd.startswith("lyrics "):
-        #     lyrics_query = cmd[len("lyrics "):].strip()
-        #     while True:
-        #         song_directory = search_song(lyrics_query)
-        #         if song_directory == None:
-        #             lyrics_query = input("Unable to find song, please enter the song you want lyrics for (enter x to quit): ")
-        #         elif lyrics_query == 'x':
-        #             break
-        #         else:
-        #             print(song_directory)
-        #             confirmation = input(f"Find lyrics for {song_directory}? (yes/no) \n")
-        #             if confirmation.lower() == "yes":
-        #                 break
-        #             else:
-        #                 lyrics_query = input("Please enter the song you want lyrics for (enter x to quit): ")
-
-        #     if lyrics_query != 'x':
-        #         display_lyrics(song_directory)
         
         elif cmd == "lyrics":
             song_directory = ((settings["song_dict"])[settings["count"]])[0] #current song
@@ -1100,17 +1079,10 @@ async def user_conts(pl : Playlist):
                     
             elif cmd == "playlist delete":
                 pl.delete_playlist()
-                                    
-            #     playlists = [entry.name for entry in os.scandir(DEFAULT_DIRECTORY) if entry.is_dir()]
-            #     playlists.append(DEFAULT_DIRECTORY)
-                
-            #     playlist_query = cmd[len("playlist "):].strip()
             
         elif cmd == "link -c -qr":
             filename = ((settings["song_dict"])[settings["count"]])[0]
             filename = "music/" + filename
-            
-            # print(filename)
             
             song_pk = find_song_id_from_name(filename)
             link = find_download_link_from_pk(song_pk)
@@ -1119,8 +1091,6 @@ async def user_conts(pl : Playlist):
                 print("No download link found for this song!")
             else:
                 create_qr_code(link)
-            
-            # create_qr_code()
                         
         elif cmd == "test":
             pl.delete_song("music/Muse - Starlight [Official Music Video].mp3")
@@ -1134,7 +1104,6 @@ async def user_conts(pl : Playlist):
             """)
             
         #debug
-        
         elif cmd == "num_songs":
             print(settings["num_songs"])
         elif cmd == "count":
@@ -1145,29 +1114,8 @@ async def user_conts(pl : Playlist):
             
             
 async def player(pl : Playlist):
-    # songs =  [f for f in os.listdir(settings["playlist"]) if f.endswith('.mp3')]
-    
-    # song_paths = []
-    
-    # queue_order = 0
-    
-    # for song in songs: #song paths
-    #     decoded_song = unquote(song) 
-    #     song_path = os.path.join(settings["playlist"], decoded_song)
-    #     # (settings["song_names"]).append(decoded_song)
-    #     song_paths.append(song_path)
-        
-    #     (settings["song_dict"])[queue_order] = (decoded_song, song_path)
-    #     queue_order += 1
-    #     settings["num_songs"]+=1
-    #     if settings["debug"]:
-    #         print("num_songs_main is: " + str(settings["num_songs"]))
-    
-    # song_paths = []
-    
     database_check() #check if any songs are not in the database
 
-    
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
@@ -1197,6 +1145,8 @@ async def player(pl : Playlist):
 
     cursor.execute(sql, params)
     file_dirs = [row[0] for row in cursor.fetchall()]
+    
+    conn.close()
     
     # print(len(file_dirs))
     # print(file_dirs)
